@@ -1,0 +1,11 @@
+# Enable mouse wheel scroll through history
+setw -g mode-mouse on
+# set-option -g mouse-select-pane off 
+# set-option -g mouse-resize-pane off 
+# set-option -g mouse-select-window off 
+# set-window-option -g mode-mouse off
+
+# only works in tmux > 1.9
+# bind c new-window -c '#{pane_current_path}'
+
+# set-option -g default-path "$PWD"
