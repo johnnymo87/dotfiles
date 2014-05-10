@@ -2,3 +2,6 @@ au BufNewFile,BufRead *.handlebars set filetype=html
 
 " so that cursor line is highlighted
 :set cursorline
+
+" highlight region after 80 characters
+let &colorcolumn=join(range(81, 256), ",")
