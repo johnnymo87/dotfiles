@@ -1,5 +1,7 @@
 Bundle "briancollins/vim-jst"
 Bundle "pangloss/vim-javascript"
+Bundle "einars/js-beautify"
+Bundle "maksimr/vim-jsbeautify"
 Bundle "rodjek/vim-puppet"
 Bundle "othree/javascript-libraries-syntax.vim"
 Bundle "claco/jasmine.vim"

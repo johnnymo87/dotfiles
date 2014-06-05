@@ -31,4 +31,8 @@ Session.vim
 # ----------------------------------------------------------------------------------------------
 .sass-cache
 
-/lib/tasks/bryan_helper_tasks.rake
+.rvmrc
+.agignore
+node_modules/
+bower_modules/
+vendor/cache/

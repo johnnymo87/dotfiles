@@ -106,3 +106,7 @@ set sidescroll=1
 
 " ================ Custom Settings ========================
 so ~/.yadr/vim/settings.vim
+
+autocmd User Node nnoremap <buffer> ,nf <Plug>NodeGotoFile
+
+nnoremap ,db :normal irequire 'pry'; binding.pry<ESC>
