@@ -1,6 +1,7 @@
 " Make it beautiful - colors and fonts
 
 " http://ethanschoonover.com/solarized/vim-colors-solarized
+" let g:solarized_termcolors=256
 colorscheme solarized
 set background=dark
 

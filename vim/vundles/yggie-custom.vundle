@@ -1,0 +1,3 @@
+Bundle "https://github.com/fatih/vim-go"
+Bundle "https://github.com/mattn/emmet-vim"
+Bundle "https://github.com/dsawardekar/ember.vim"

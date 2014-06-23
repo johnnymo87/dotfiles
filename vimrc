@@ -106,3 +106,8 @@ set sidescroll=1
 
 " ================ Custom Settings ========================
 so ~/.yadr/vim/settings.vim
+
+nnoremap ,db :normal irequire 'pry'; binding.pry<ESC>
+
+set exrc  " enable per-directory .vimrc files
+set secure " disable unsafe commands in local .vimrc files

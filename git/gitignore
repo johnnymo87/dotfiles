@@ -30,3 +30,9 @@ Session.vim
 # SASS
 # ----------------------------------------------------------------------------------------------
 .sass-cache
+
+.rvmrc
+.agignore
+node_modules/
+bower_modules/
+vendor/cache/
