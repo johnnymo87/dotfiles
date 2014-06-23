@@ -1,2 +1,2 @@
-nnoremap ,rs :! rspec %<cr>
-nnoremap ,rc :! cucumber % -r features<cr>
+nnoremap ,rs :wa<cr>:! rspec %<cr>
+nnoremap ,rc :wa<cr>:! cucumber % -r features<cr>
