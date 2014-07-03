@@ -110,6 +110,11 @@ so ~/.yadr/vim/settings.vim
 nnoremap ,db :normal orequire 'pry'; binding.pry<ESC>
 
 set exrc  " enable per-directory .vimrc files
+
 set secure " disable unsafe commands in local .vimrc files
+
 let g:session_autosave = 'yes'
+
 set shell=/bin/sh
+
+set iskeyword-=_ "recognize underscore as word break
