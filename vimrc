@@ -120,3 +120,7 @@ set shell=/bin/sh
 set iskeyword-=_ "recognize underscore as word break
 
 set colorcolumn=81,82,83 "vertical bar at right of column 80
+
+nnoremap ,l :update<cr>
+
+set lazyredraw! " reduce scrolling lag
