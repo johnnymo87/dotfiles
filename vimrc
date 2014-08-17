@@ -124,3 +124,19 @@ set colorcolumn=81,82,83 "vertical bar at right of column 80
 nnoremap ,l :update<cr>
 
 set lazyredraw! " reduce scrolling lag
+
+nnoremap ,cp :let @+=@%<CR> " copy current file's path to system buffer
+
+" In normal mode or in insert mode, press Alt-j to move the current line down, or
+" press Alt-k to move the current line up.
+"
+" After visually selecting a block of lines (for example, by pressing V then
+" moving the cursor down), press Alt-j to move the whole block down, or press
+" Alt-k to move the block up.
+
+nnoremap ∆ :m .+1<CR>==
+nnoremap ˚ :m .-2<CR>==
+inoremap ∆ > <Esc>:m .+1<CR>==gi
+inoremap ˚ <Esc>:m .-2<CR>==gi
+vnoremap ∆ :m '>+1<CR>gv=gv
+vnoremap ˚ :m '<-2<CR>gv=gv
