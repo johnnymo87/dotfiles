@@ -22,3 +22,10 @@ function fn() { ls **/*$1* }
 # usage: vimmodified 1
 # to open all files modified from '1' commit ago as buffers in vim
 function vimmodified() { git diff --name-only HEAD HEAD~$1 | xargs -J % vim % }
+
+# http://joey.aghion.com/find-the-github-pull-request-for-a-commit/
+export GITHUB_UPSTREAM=upstream
+
+function pr_for_sha {
+  git describe --all --contains $1
+}
