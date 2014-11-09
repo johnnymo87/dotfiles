@@ -140,3 +140,11 @@ inoremap ∆ > <Esc>:m .+1<CR>==gi
 inoremap ˚ <Esc>:m .-2<CR>==gi
 vnoremap ∆ :m '>+1<CR>gv=gv
 vnoremap ˚ :m '<-2<CR>gv=gv
+
+function! RunSpec(fileAndLineNumber)
+  exe 'wa'
+  exe '!rspec ' . a:fileAndLineNumber
+endfunction
+
+nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
+nnoremap ,p :call RunSpec(@f)<CR>
