@@ -46,6 +46,7 @@ alias ze='vim ~/.zshrc'
 alias zr='source ~/.zshrc'
 
 # Git Aliases
+alias bb='@\{-1\}' # refers to the previous branch
 alias gs='git status'
 alias gstsh='git stash'
 alias gst='git stash'
