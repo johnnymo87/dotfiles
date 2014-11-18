@@ -26,6 +26,8 @@ function vimmodified() { git diff --name-only HEAD HEAD~$1 | xargs -o vim -p }
 # http://joey.aghion.com/find-the-github-pull-request-for-a-commit/
 export GITHUB_UPSTREAM=upstream
 
+export bb='@{-1}' # refers to the previous branch
+
 function pr_for_sha {
   git describe --all --contains $1
 }
