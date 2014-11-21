@@ -28,6 +28,10 @@ export GITHUB_UPSTREAM=upstream
 
 export bb='@{-1}' # refers to the previous branch
 
+# from brew install coreutils
+export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+
 function pr_for_sha {
   git describe --all --contains $1
 }
