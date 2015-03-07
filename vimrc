@@ -143,8 +143,12 @@ vnoremap ˚ :m '<-2<CR>gv=gv
 
 function! RunSpec(fileAndLineNumber)
   exe 'wa'
-  exe '!rspec ' . a:fileAndLineNumber
+  exe '!rspec ' . a:fileAndLineNumber . ' --format documentation'
 endfunction
 
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
 nnoremap ,p :call RunSpec(@f)<CR>
+
+highlight link hspecDescribe Type
+highlight link hspecIt Identifier
+highlight link hspecDescription Comment
