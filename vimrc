@@ -123,6 +123,9 @@ set colorcolumn=81,82,83 "vertical bar at right of column 80
 
 nnoremap ,l :update<cr>
 
+"alternate binding for escape key
+imap jk <ESC>
+
 set lazyredraw! " reduce scrolling lag
 
 nnoremap ,cp :let @+=@%<CR> " copy current file's path to system buffer
@@ -143,11 +146,25 @@ vnoremap ˚ :m '<-2<CR>gv=gv
 
 function! RunSpec(fileAndLineNumber)
   exe 'wa'
-  exe '!rspec ' . a:fileAndLineNumber . ' --format documentation'
+  exe 'Dispatch rspec ' . a:fileAndLineNumber . ' --format documentation --color'
 endfunction
+
+function! RunCuke(fileAndLineNumber)
+  exe 'wa'
+  exe 'Dispatch cucumber ' . a:fileAndLineNumber . ' -r features/'
+endfunction
+
+function! RunRakeDbTestPrepare()
+  exe 'wa'
+  exe 'Dispatch rake db:test:prepare'
+endfunction
+
 
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
 nnoremap ,p :call RunSpec(@f)<CR>
+nnoremap ,uu :let @g= @% . ':' . line('.')<CR>
+nnoremap ,i :call RunCuke(@g)<CR>
+nnoremap ,yy :call RunRakeDbTestPrepare()<CR>
 
 highlight link hspecDescribe Type
 highlight link hspecIt Identifier
