@@ -144,14 +144,14 @@ inoremap ˚ <Esc>:m .-2<CR>==gi
 vnoremap ∆ :m '>+1<CR>gv=gv
 vnoremap ˚ :m '<-2<CR>gv=gv
 
-function! RunSpec(fileAndLineNumber)
+function! RunSpec(runner, fileAndLineNumber)
   exe 'wa'
-  exe 'Dispatch rspec ' . a:fileAndLineNumber . ' --format documentation --color'
+  exe a:runner . ' rspec ' . a:fileAndLineNumber . ' --format documentation --color'
 endfunction
 
-function! RunCuke(fileAndLineNumber)
+function! RunCuke(runner, fileAndLineNumber)
   exe 'wa'
-  exe 'Dispatch cucumber ' . a:fileAndLineNumber . ' -r features/'
+  exe a:runner . ' cucumber ' . a:fileAndLineNumber . ' -r features/'
 endfunction
 
 function! RunRakeDbTestPrepare()
@@ -159,11 +159,22 @@ function! RunRakeDbTestPrepare()
   exe 'Dispatch rake db:test:prepare'
 endfunction
 
+function! StripLineNumber(fileAndLineNumber)
+  return substitute(a:fileAndLineNumber, '\(:.*\)', '', '')
+endfunction
 
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
-nnoremap ,p :call RunSpec(@f)<CR>
+nnoremap ,8p :call RunSpec('Dispatch', StripLineNumber(@f))<CR>
+nnoremap ,p :call RunSpec('Dispatch', @f)<CR>
+nnoremap ,0p :call RunSpec('!', @f)<CR>
+nnoremap ,9p :call RunSpec('!', StripLineNumber(@f))<CR>
+
 nnoremap ,uu :let @g= @% . ':' . line('.')<CR>
-nnoremap ,i :call RunCuke(@g)<CR>
+nnoremap ,8i :call RunCuke('Dispatch', StripLineNumber(@g))<CR>
+nnoremap ,i :call RunCuke('Dispatch', @g)<CR>
+nnoremap ,0i :call RunCuke('!', @g)<CR>
+nnoremap ,9i :call RunCuke('!', StripLineNumber(@g))<CR>
+
 nnoremap ,yy :call RunRakeDbTestPrepare()<CR>
 
 highlight link hspecDescribe Type
