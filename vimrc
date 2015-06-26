@@ -163,6 +163,17 @@ function! StripLineNumber(fileAndLineNumber)
   return substitute(a:fileAndLineNumber, '\(:.*\)', '', '')
 endfunction
 
+function! OpenParens()
+  s:(:(\r
+  s:):\r)
+  normal k
+  s:,:,\r:g
+  noh
+  normal jv%=
+endfunction
+
+nnoremap ,1w :call OpenParens()<CR>
+
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
 nnoremap ,8p :call RunSpec('Dispatch', StripLineNumber(@f))<CR>
 nnoremap ,p :call RunSpec('Dispatch', @f)<CR>
