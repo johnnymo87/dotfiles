@@ -174,6 +174,12 @@ endfunction
 
 nnoremap ,1w :call OpenParens()<CR>
 
+function! FindSpec()
+  return substitute(@%, '\v^(app)(.*)(\.rb)$', 'spec\2_spec.rb', '')
+endfunction
+
+nnoremap ;s :exe 'vsp ' . FindSpec()<CR>
+
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
 nnoremap ,8p :call RunSpec('Dispatch', StripLineNumber(@f))<CR>
 nnoremap ,p :call RunSpec('Dispatch', @f)<CR>
