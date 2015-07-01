@@ -197,3 +197,12 @@ nnoremap ,yy :call RunRakeDbTestPrepare()<CR>
 highlight link hspecDescribe Type
 highlight link hspecIt Identifier
 highlight link hspecDescription Comment
+
+" associate *.foo with php filetype
+au BufRead,BufNewFile *.es6 setfiletype javascript
+
+" use jsx syntax plugin on non-.jsx files
+let g:jsx_ext_required = 0
+
+" use custom js linter from https://github.com/jaxbot/syntastic-react
+let g:syntastic_javascript_checkers = ['eslint']
