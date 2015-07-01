@@ -174,11 +174,15 @@ endfunction
 
 nnoremap ,1w :call OpenParens()<CR>
 
-function! FindSpec()
-  return substitute(@%, '\v^(app)(.*)(\.rb)$', 'spec\2_spec.rb', '')
+function! FindSourceOrSpec()
+  if match(@%, '\v^app') ==? -1
+    return substitute(@%, '\v^(spec)(.*)(_spec\.rb)$', 'app\2.rb', '')
+  else
+    return substitute(@%, '\v^(app)(.*)(\.rb)$', 'spec\2_spec.rb', '')
+  endif
 endfunction
 
-nnoremap ;s :exe 'vsp ' . FindSpec()<CR>
+nnoremap ,ss :exe 'vsp ' . FindSourceOrSpec()<CR>
 
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
 nnoremap ,8p :call RunSpec('Dispatch', StripLineNumber(@f))<CR>
