@@ -1,4 +1,5 @@
 Bundle "gregsexton/gitv"
 Bundle "mattn/gist-vim"
+Bundle "godlygeek/csapprox"
 Bundle "tpope/vim-fugitive"
 Bundle "tpope/vim-git"
