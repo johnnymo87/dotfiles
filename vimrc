@@ -175,9 +175,13 @@ endfunction
 nnoremap ,1w :call OpenParens()<CR>
 
 function! FindSourceOrSpec()
-  if match(@%, '\v^app') ==? -1
+  if match(@%, '\v^app/assets/javascripts/') != -1
+    return substitute(@%, '\v^(app/assets/javascripts/)(.*)(\.es6)$', 'app/assets/test/\2.spec.es6', '')
+  elseif match(@%, '\v\.spec\.es6') != -1
+    return substitute(@%, '\v^(app/assets/test/)(.*)(\.spec\.es6)$', 'app/assets/javascripts/\2.es6', '')
+  elseif match(@%, '\v_spec\.rb') != -1
     return substitute(@%, '\v^(spec)(.*)(_spec\.rb)$', 'app\2.rb', '')
-  else
+  elseif match(@%, '\v^app.*\.rb') != -1
     return substitute(@%, '\v^(app)(.*)(\.rb)$', 'spec\2_spec.rb', '')
   endif
 endfunction
