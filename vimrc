@@ -174,6 +174,15 @@ endfunction
 
 nnoremap ,1w :call OpenParens()<CR>
 
+function! OpenCurlies()
+  s:{:do\r:
+  s: }:\rend:
+  normal v%=j
+  noh
+endfunction
+
+nnoremap ,1s :call OpenCurlies()<CR>
+
 function! FindSourceOrSpec()
   if match(@%, '\v^app/assets/javascripts/') != -1
     return substitute(@%, '\v^(app/assets/javascripts/)(.*)(\.es6)$', 'app/assets/test/\2.spec.es6', '')
