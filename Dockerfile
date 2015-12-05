@@ -33,8 +33,13 @@ RUN mkdir -p ~/.vim/autoload ~/.vim/bundle && \
 RUN git clone https://github.com/scrooloose/nerdtree.git ~/.vim/bundle/nerdtree && \
     git clone https://github.com/fatih/vim-go.git ~/.vim/bundle/vim-go
 
-ADD .vimrc /root/.vimrc
-ADD .vimrc.local /root/.vimrc.local
-ADD .zshrc /root/.zshrc
+VOLUME ["/go/src"]
 
+ADD vimrc /root/.vimrc
+ADD vimrc.local /root/.vimrc.local
+ADD zshrc /root/.zshrc
 
+RUN mkdir /project
+WORKDIR /project
+
+CMD vim
