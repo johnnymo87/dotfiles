@@ -11,7 +11,8 @@ function! GetVisual()
 endfunction
 
 "grep the current word using K (mnemonic Kurrent)
-nnoremap <silent> K :Ag <cword><CR>
+"I accidentally hit this way too much, disabling
+"nnoremap <silent> K :Ag <cword><CR>
 
 "grep visual selection
 vnoremap K :<C-U>execute "Ag " . GetVisual()<CR>
