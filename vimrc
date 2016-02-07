@@ -221,12 +221,17 @@ highlight link hspecDescribe Type
 highlight link hspecIt Identifier
 highlight link hspecDescription Comment
 
-" associate *.foo with php filetype
-au BufRead,BufNewFile *.es6 setfiletype javascript
+" associate *.es6 with javascript filetype
+au BufRead,BufNewFile *.es6 set filetype=javascript
+
+" associate *.json with json filetype
+au BufRead,BufNewFile *.json set filetype=json
 
 " use jsx syntax plugin on non-.jsx files
 let g:jsx_ext_required = 0
 
 " use custom js linter from https://github.com/jaxbot/syntastic-react
 let g:syntastic_javascript_checkers = ['eslint']
+let g:syntastic_json_checkers=['jsonlint']
+
 let g:go_fmt_command = "goimports"
