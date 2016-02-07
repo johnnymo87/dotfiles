@@ -154,6 +154,11 @@ function! RunCuke(runner, fileAndLineNumber)
   exe a:runner . ' cucumber ' . a:fileAndLineNumber . ' -r features/'
 endfunction
 
+function! RunHspec(runner, file)
+  exe 'wa'
+  exe a:runner . ' runhaskell ' . a:file
+endfunction
+
 function! RunRakeDbTestPrepare()
   exe 'wa'
   exe 'Dispatch rake db:test:prepare'
@@ -202,6 +207,7 @@ nnoremap ,8p :call RunSpec('Dispatch', StripLineNumber(@f))<CR>
 nnoremap ,p :call RunSpec('Dispatch', @f)<CR>
 nnoremap ,0p :call RunSpec('!', @f)<CR>
 nnoremap ,9p :call RunSpec('!', StripLineNumber(@f))<CR>
+nnoremap ,0k :call RunHspec('!', StripLineNumber(@f))<CR>
 
 nnoremap ,uu :let @g= @% . ':' . line('.')<CR>
 nnoremap ,8i :call RunCuke('Dispatch', StripLineNumber(@g))<CR>
