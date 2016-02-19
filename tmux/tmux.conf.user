@@ -1,5 +1,5 @@
 # Enable mouse wheel scroll through history
-setw -g mode-mouse on
+# set -g mouse on
 # set-option -g mouse-select-pane off 
 # set-option -g mouse-resize-pane off 
 # set-option -g mouse-select-window off 
