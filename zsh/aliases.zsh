@@ -154,3 +154,20 @@ alias grb='git recent-branches'
 # Finder
 alias showFiles='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'
 alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'
+
+# ================ Docker aliases ====================
+
+alias dco="docker-compose"
+alias dme='eval "$(docker-machine env dev)"'
+alias docker-stop-all='docker stop $(docker ps -qa) && docker rm $(docker ps -qa)'
+alias docker-rmi='docker rmi $(docker images | grep "^<none>" | awk "{print $3}")'
+alias docker-rmv='docker volume rm $(docker volume ls -qf dangling=true)'
+
+# ================ Kube aliases ====================
+# alias kb="kubectl --kubeconfig='/Users/jonmohrbacher/kube/dev-kube/kubeconfig'"
+alias kb-dev="kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=admintools"
+alias kb-bway="kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=broadway"
+alias kb-pp="kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=preprod"
+function getpod {
+  kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=$1 get pods | grep $2 | head -n 1 | awk '{ print $1 }'
+}
