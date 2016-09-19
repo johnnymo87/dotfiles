@@ -244,3 +244,5 @@ let g:syntastic_javascript_checkers = ['eslint']
 let g:syntastic_json_checkers=['jsonlint']
 
 let g:go_fmt_command = "goimports"
+
+let g:syntastic_python_python_exec = '/usr/local/bin/python3'
