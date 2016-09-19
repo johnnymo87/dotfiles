@@ -200,6 +200,15 @@ function! FindSourceOrSpec()
   endif
 endfunction
 
+nnoremap ,1x :call HashRocketize()<CR>
+
+function! HashRocketize()
+  normal I:
+  normal f:
+  normal cw =>
+  normal j
+endfunction
+
 nnoremap ,ss :exe 'vsp ' . FindSourceOrSpec()<CR>
 
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
