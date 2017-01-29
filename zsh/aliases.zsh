@@ -159,9 +159,45 @@ alias hideFiles='defaults write com.apple.finder AppleShowAllFiles NO; killall F
 
 alias dco="docker-compose"
 alias dme='eval "$(docker-machine env dev)"'
-alias docker-stop-all='docker stop $(docker ps -qa) && docker rm $(docker ps -qa)'
-alias docker-rmi='docker rmi $(docker images | grep "^<none>" | awk "{print $3}")'
+alias docker-stop-all='docker rm -f $(docker ps -qa)'
+function docker-rmi {
+  docker rmi -f $(docker images | grep '^<none>' | awk '{ print $3 }')
+}
 alias docker-rmv='docker volume rm $(docker volume ls -qf dangling=true)'
+function dexec() { docker exec -ti $(docker ps -f name=$1 -q) $2 }
+# http://stackoverflow.com/a/17841619/2197402
+function join_by { local d=$1; shift; echo -n "$1"; shift; printf "%s" "${@/#/$d}"; }
+function docker-nuke-images {
+  local IMAGE_WHITELIST=$(
+    join_by '\|' \
+    IMAGE \
+    banking-integration-tests \
+    wait2 \
+    assetstest \
+    webtest \
+    namelypayrolldata_app:latest \
+    1.0-sdk-projectjson \
+    namelypayrolldata_app \
+    postgres \
+    namely_sidekiq \
+    namely_web \
+    namely_assets \
+    registry.namely.run/namely/namely-payroll-data-dev \
+    schickling/mailcatcher \
+    microsoft/mssql-server-linux \
+    redis \
+    registry.namely.run/namely/sessions \
+    registry.namely.run/namely/namely-base \
+    registry.namely.run/namely/accounts \
+    selenium/standalone-chrome-debug \
+    registry.namely.run/namely/hcmdb \
+    registry.namely.run/namely/heimdall \
+    registry.namely.run/namely/heimdalldb \
+    macat/statsd-dev \
+    golang:1.7-alpine \
+    node
+  )
+}
 
 # ================ Kube aliases ====================
 # alias kb="kubectl --kubeconfig='/Users/jonmohrbacher/kube/dev-kube/kubeconfig'"
