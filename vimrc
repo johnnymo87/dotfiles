@@ -212,8 +212,8 @@ endfunction
 nnoremap ,ss :exe 'vsp ' . FindSourceOrSpec()<CR>
 
 nnoremap ,oo :let @f= @% . ':' . line('.')<CR>
-nnoremap ,8p :call RunSpec('Dispatch', StripLineNumber(@f))<CR>
-nnoremap ,p :call RunSpec('Dispatch', @f)<CR>
+nnoremap ,8p :call RunSpec('!spring', StripLineNumber(@f))<CR>
+nnoremap ,p :call RunSpec('!spring', @f)<CR>
 nnoremap ,0p :call RunSpec('!', @f)<CR>
 nnoremap ,9p :call RunSpec('!', StripLineNumber(@f))<CR>
 nnoremap ,0k :call RunHspec('!', StripLineNumber(@f))<CR>
