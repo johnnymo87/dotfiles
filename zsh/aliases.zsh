@@ -201,9 +201,10 @@ function docker-nuke-images {
 
 # ================ Kube aliases ====================
 # alias kb="kubectl --kubeconfig='/Users/jonmohrbacher/kube/dev-kube/kubeconfig'"
-alias kb-dev="kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=admintools"
-alias kb-bway="kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=broadway"
-alias kb-pp="kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=preprod"
+alias kb-dev="kubectl --kubeconfig=/Users/jonmohrbacher/.kube/config --namespace=admintools"
+alias kb-bway="kubectl --kubeconfig=/Users/jonmohrbacher/.kube/config --namespace=broadway"
+alias kb-pp="kubectl --kubeconfig=/Users/jonmohrbacher/.kube/config --namespace=preprod"
+alias kb-jk="kubectl --kubeconfig=/Users/jonmohrbacher/.kube/config --namespace=jenkins"
 function getpod {
   kubectl --kubeconfig=/Users/jonmohrbacher/kube/dev-kube/kubeconfig --namespace=$1 get pods | grep $2 | head -n 1 | awk '{ print $1 }'
 }
