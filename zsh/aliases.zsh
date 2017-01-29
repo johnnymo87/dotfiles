@@ -94,6 +94,7 @@ alias gsmu='git submodule update'
 alias gt='git t'
 alias gbg='git bisect good'
 alias gbb='git bisect bad'
+alias git-authors="git log --pretty=format:'%an <%ae>'"
 
 # Common shell functions
 alias less='less -r'
