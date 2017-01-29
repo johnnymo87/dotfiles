@@ -107,7 +107,7 @@ set sidescroll=1
 " ================ Custom Settings ========================
 so ~/.yadr/vim/settings.vim
 
-nnoremap ,db :normal orequire 'pry'; binding.pry<ESC>
+nnoremap ,db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
 
 set exrc  " enable per-directory .vimrc files
 
