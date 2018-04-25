@@ -185,8 +185,8 @@ nnoremap <leader>9i :call RunCuke('!', StripLineNumber(@g))<CR>
 nnoremap <silent> <leader>. :NERDTreeFind<CR>:vertical res 30<CR>
 nnoremap <silent> <leader>/ :NERDTreeClose<CR>
 
-" ==== Silver Searcher
-nnoremap ,gg :Ag ""<left>
+" ==== vim-ripgrep
+nnoremap ,gg :Rg ""<left>
 
 " ==== Fuzzy finder CtrlP
 nnoremap <silent> ,t :CtrlP<CR>

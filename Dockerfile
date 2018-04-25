@@ -19,7 +19,6 @@ RUN apt-get install -y \
   libxpm-dev \
   ncurses-dev \
   python3-dev \
-  silversearcher-ag \
   zsh
 
 WORKDIR /root
@@ -35,6 +34,10 @@ RUN curl -LO https://github.com/vim/vim/archive/master.tar.gz && \
               --with-python3-config-dir=/usr/lib/python3.4/config-3.4m-x86_64-linux-gnu && \
   make && \
   make install
+
+# https://github.com/BurntSushi/ripgrep
+RUN curl -LO https://github.com/BurntSushi/ripgrep/releases/download/0.8.1/ripgrep_0.8.1_amd64.deb && \
+  dpkg -i ripgrep_0.8.1_amd64.deb
 
 ADD .vim .vim
 RUN python3 .vim/pack/foo/start/YouCompleteMe/install.py
