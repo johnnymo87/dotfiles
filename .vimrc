@@ -77,6 +77,8 @@ nnoremap <leader>l :update<cr>
 
 nnoremap <leader>cp :let @+=@%<CR> " copy current file's path to system buffer
 
+nnoremap <leader>s :%s/\s\+$//e<CR> " strip trailing whitespaces
+
 "make Y consistent with C and D
 nnoremap Y y$
 
