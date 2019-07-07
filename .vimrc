@@ -21,9 +21,6 @@ set autoindent
 filetype plugin on
 filetype indent on
 
-" Turn on syntax highlighting
-syntax enable
-
 " Change leader to a comma because the backslash is too far away
 let mapleader=","
 
@@ -59,17 +56,15 @@ vnoremap # y?\V<C-R>"<CR>
 " Show the `line,column` numbers in the status bar
 set ruler
 
-" solarized dark with 256 colors
 set t_Co=256
 let g:solarized_termcolors=256
-set background=dark
-colorscheme solarized
+syntax enable
+colorscheme monokai
 
 " 80 character delimiter
 highlight ColorColumn ctermbg=235 guibg=#2c2d27
 set colorcolumn=81 "vertical bar at right of column 80
 
-set shell=zsh
 set clipboard=unnamed
 set showcmd "Show key presses in normal mode
 set iskeyword-=_ "recognize underscore as word break
