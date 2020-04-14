@@ -160,14 +160,13 @@ function! FindSourceOrSpec()
   endif
 endfunction
 
-nnoremap ,1x :call HashRocketize()<CR>
+nnoremap ,1x :call SplitPairOverNewline()<CR>
 
-function! HashRocketize()
-  normal I:
-  normal f:
-  normal cw =>
-  normal j
+function! SplitPairOverNewline()
+  normal a
+  normal k$%i
 endfunction
+
 
 nnoremap <leader>ss :exe 'vsp ' . FindSourceOrSpec()<CR>
 
