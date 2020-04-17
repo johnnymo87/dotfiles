@@ -142,7 +142,7 @@ nnoremap <leader>1w :call OpenParens()<CR>
 function! OpenCurlies()
   s:{:do\r:
   s: }:\rend:
-  normal v%=j
+  normal Vkk=jj
   noh
 endfunction
 
