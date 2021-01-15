@@ -244,3 +244,7 @@ let g:jsx_ext_required = 0
 " use custom js linter from https://github.com/jaxbot/syntastic-react
 let g:syntastic_javascript_checkers = ['eslint']
 let g:syntastic_json_checkers=['jsonlint']
+
+" https://andrew.stwrt.ca/posts/project-specific-vimrc/
+set exrc
+set secure
