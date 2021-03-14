@@ -109,7 +109,7 @@ colorscheme monokai
 highlight ColorColumn ctermbg=235 guibg=#2c2d27
 set colorcolumn=81 "vertical bar at right of column 80
 
-set clipboard=unnamed
+set clipboard=unnamedplus "Use system clipboard by default
 set showcmd "Show key presses in normal mode
 set iskeyword-=_ "recognize underscore as word break
 
