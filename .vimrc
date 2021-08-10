@@ -231,6 +231,7 @@ nnoremap ,gg :Rg ""<left>
 
 " ==== Fuzzy finder CtrlP
 nnoremap <silent> ,t :CtrlP<CR>
+let g:ctrlp_custom_ignore = 'node_modules\|git'
 
 " associate *.es6 with javascript filetype
 au BufRead,BufNewFile *.es6 set filetype=javascript
