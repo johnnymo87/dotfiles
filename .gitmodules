@@ -25,3 +25,6 @@
 [submodule ".vim/pack/foo/start/vim-obsession"]
 	path = .vim/pack/foo/start/vim-obsession
 	url = git@github.com:tpope/vim-obsession.git
+[submodule ".tmux/plugins/tpm"]
+	path = .tmux/plugins/tpm
+	url = git@github.com:tmux-plugins/tpm.git
