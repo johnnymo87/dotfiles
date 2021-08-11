@@ -4,44 +4,29 @@ I'm turning away from [running vim in docker](https://github.com/johnnymo87/dev-
 
 ## Installation
 
-1. Because this repository uses git submodules, clone it recusively: `git clone --recurse-submodules git@github.com:johnnymo87/dotfiles.git`.
+Use the OS's recommended package manager to install or update everything mentioned below.
+
+1. If on a mac, [install homebrew](https://brew.sh/) for use as a package manager.
+
+1. Upgrade to the latest version of bash.
+
+1. Install git if it doesn't already exist.
+
+1. [Generate a new SSH key for GitHub](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) and then [add it to GitHub](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
+
+1. Because this repository uses git submodules, clone it recusively: `git clone --recurse-submodules git@github.com:johnnymo87/dotfiles.git`. Then `cd dotfiles`.
 
 1. Symlink the necessary files to `~`.
 
    ```
-   ls -s .bash_profile ~
-   ls -s .bashrc ~
-   ls -s .gitconfig ~
-   ls -s .tmux.conf ~
-   ls -s .tmux/ ~
-   ls -s .vim/ ~
-   ls -s .vimrc ~
+   for x in .bash_profile .bashrc .bashrc.d .gitconfig .tmux.conf .tmux .vim .vimrc; do ln -sf $(pwd)/$x ~/$x; done
    ```
 
-1. Install [`jq`](https://github.com/stedolan/jq/releases/latest).
+1. Install tmux.
 
-1. Install [`tmux`](https://github.com/tmux/tmux/releases/latest).
+1. Install vim.
 
-1. Install vim from source.
-
-   ```
-   curl -LO https://github.com/vim/vim/archive/master.tar.gz && \
-     tar -zxvf master.tar.gz && \
-     cd vim-master/src && \
-
-     ./configure --prefix=/usr \
-                 --with-x \
-                 --enable-gui && \
-     make && \
-     make install
-
-   ```
-1. Install [ripgrep](https://github.com/BurntSushi/ripgrep) for faster grepping with [ag.vim](https://github.com/rking/ag.vim).
-
-   ```
-   curl -LO https://github.com/BurntSushi/ripgrep/releases/download/0.8.1/ripgrep_0.8.1_amd64.deb && \
-     dpkg -i ripgrep_0.8.1_amd64.deb
-   ```
+1. Install ripgrep for faster grepping with [ag.vim](https://github.com/rking/ag.vim).
 
 ## Adding new things
 
@@ -50,3 +35,5 @@ New vim plugins need to be submoduled in `.vim/pack/foo/start/`. New tmux plugin
    ```
    git submodule add <git@github ...> .vim/pack/foo/start/my-new-vim-plugin
    ```
+
+New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be executable, so do `chmod +x .bashrc.d/*.bashrc` after adding a new one.
