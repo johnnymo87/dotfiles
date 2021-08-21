@@ -229,6 +229,7 @@ nnoremap <leader>9i :call RunCuke('!', StripLineNumber(@g))<CR>
 " ==== NERD tree
 nnoremap <silent> <leader>. :NERDTreeFind<CR>:vertical res 30<CR>
 nnoremap <silent> <leader>/ :NERDTreeClose<CR>
+let NERDTreeShowHidden=1 " Show hidden files by default
 
 " ==== vim-ripgrep
 nnoremap ,gg :Rg ""<left>
