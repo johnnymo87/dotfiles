@@ -3,5 +3,5 @@
 # Except the tpm plugin
 !/.tmux/plugins/tpm
 
-# Ignore the bashrc specific to where I work
-/.bashrc.d/ba.bashrc
+# Ignore the bashrc files with private info
+/.bashrc.d/*.private.bashrc
