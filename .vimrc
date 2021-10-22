@@ -2,7 +2,7 @@ scriptencoding utf-8
 set encoding=utf-8
 
 " Turn off vi compatibility
-set nocompatible
+set nocompatible " We're running Vim, not Vi!
 
 " ================ Turn Off Mouse ==============
 " https://stackoverflow.com/a/52067797/2197402
@@ -62,8 +62,9 @@ set smartindent
 set autoindent
 
 " Load indent file for the current filetype
-filetype plugin on
-filetype indent on
+filetype on        " Enable filetype detection
+filetype indent on " Enable filetype-specific indenting
+filetype plugin on " Enable filetype-specific plugins
 
 " Change leader to a comma because the backslash is too far away
 let mapleader=","
@@ -101,7 +102,7 @@ set ruler
 
 set t_Co=256
 let g:solarized_termcolors=256
-syntax enable
+syntax enable " Enable syntax highlighting
 colorscheme monokai
 
 " 80 character delimiter
