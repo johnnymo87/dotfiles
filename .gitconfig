@@ -38,3 +38,5 @@
 [user]
   email = johnnymo87@gmail.com
   name = Jonathan Mohrbacher
+[pull]
+	rebase = true
