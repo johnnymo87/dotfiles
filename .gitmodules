@@ -25,3 +25,6 @@
 [submodule ".tmux/plugins/tpm"]
 	path = .tmux/plugins/tpm
 	url = git@github.com:tmux-plugins/tpm.git
+[submodule ".vim/pack/foo/start/vim-ruby"]
+	path = .vim/pack/foo/start/vim-ruby
+	url = git@github.com:vim-ruby/vim-ruby.git
