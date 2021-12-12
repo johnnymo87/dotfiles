@@ -232,10 +232,10 @@ nnoremap <silent> <leader>/ :NERDTreeClose<CR>
 let NERDTreeShowHidden=1 " Show hidden files by default
 
 " ==== vim-ripgrep
-nnoremap ,gg :Rg ""<left>
+nnoremap <leader>gg :Rg ""<left>
 
 " ==== Fuzzy finder CtrlP
-nnoremap <silent> ,t :CtrlP<CR>
+nnoremap <silent> <leader>t :CtrlP<CR>
 let g:ctrlp_custom_ignore = 'node_modules\|git'
 
 " associate *.es6 with javascript filetype
