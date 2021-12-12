@@ -28,6 +28,14 @@ Use the OS's recommended package manager to install or update everything mention
 
 1. Install ripgrep for faster grepping with [ag.vim](https://github.com/rking/ag.vim).
 
+1. Finish installing [YouCompleteMe](https://github.com/ycm-core/YouCompleteMe).
+   * Install prerequisites, follow [the instructions specific to your operating system](https://github.com/ycm-core/YouCompleteMe)
+   * Compile YouCompleteMe
+     ```
+     cd .vim/pack/foo/start/YouCompleteMe
+     python3 install.py --all --verbose
+     ```
+
 ## Adding new things
 I use Vim's built-in package management, see `:help packages`. New vim plugins need to be submoduled in `.vim/pack/foo/start/`.
 ```

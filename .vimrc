@@ -238,6 +238,10 @@ nnoremap <leader>gg :Rg ""<left>
 nnoremap <silent> <leader>t :CtrlP<CR>
 let g:ctrlp_custom_ignore = 'node_modules\|git'
 
+" ==== YouCompleteMe
+" Jump to definition
+nnoremap <leader>jd :YcmCompleter GoTo<CR>
+
 " associate *.es6 with javascript filetype
 au BufRead,BufNewFile *.es6 set filetype=javascript
 
