@@ -100,10 +100,7 @@ vnoremap # y?\V<C-R>"<CR>
 " Show the `line,column` numbers in the status bar
 set ruler
 
-set t_Co=256
-let g:solarized_termcolors=256
 syntax enable " Enable syntax highlighting
-colorscheme monokai
 
 " 80 character delimiter
 highlight ColorColumn ctermbg=235 guibg=#2c2d27
@@ -225,6 +222,17 @@ nnoremap <leader>9p :call RunSpec('!', StripLineNumber(@f))<CR>
 nnoremap <leader>uu :let @g= @% . ':' . line('.')<CR>
 nnoremap <leader>0i :call RunCuke('!', @g)<CR>
 nnoremap <leader>9i :call RunCuke('!', StripLineNumber(@g))<CR>
+
+
+" ==== gruvbox
+" Switch to dark color scheme
+set background=dark
+" Turn the contrast all the way up
+let g:gruvbox_contrast_light='hard'
+let g:gruvbox_contrast_dark='hard'
+" Then enable it
+" autocmd vimenter * ++nested colorscheme gruvbox
+colorscheme gruvbox
 
 " ==== NERD tree
 nnoremap <silent> <leader>. :NERDTreeFind<CR>:vertical res 30<CR>
