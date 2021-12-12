@@ -29,11 +29,11 @@ Use the OS's recommended package manager to install or update everything mention
 1. Install ripgrep for faster grepping with [ag.vim](https://github.com/rking/ag.vim).
 
 ## Adding new things
+I use Vim's built-in package management, see `:help packages`. New vim plugins need to be submoduled in `.vim/pack/foo/start/`.
+```
+git submodule add <git@github ...> .vim/pack/foo/start/my-new-vim-plugin
+```
 
-New vim plugins need to be submoduled in `.vim/pack/foo/start/`. New tmux plugins are automatically cloned by `tpm`, so no need to do anything for them.
-
-   ```
-   git submodule add <git@github ...> .vim/pack/foo/start/my-new-vim-plugin
-   ```
+New tmux plugins are automatically cloned by `tpm`, so no need to do anything for them.
 
 New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be executable, so do `chmod +x .bashrc.d/*.bashrc` after adding a new one.
