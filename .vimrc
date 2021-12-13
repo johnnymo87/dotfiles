@@ -102,9 +102,9 @@ set ruler
 
 syntax enable " Enable syntax highlighting
 
-" 80 character delimiter
+" A visual guide for my column soft and hard limits
 highlight ColorColumn ctermbg=235 guibg=#2c2d27
-set colorcolumn=81 "vertical bar at right of column 80
+set colorcolumn=79,120
 
 " TODO Don't lose clipboard when quitting/suspending vim
 " https://stackoverflow.com/questions/6453595/prevent-vim-from-clearing-the-clipboard-on-exit
