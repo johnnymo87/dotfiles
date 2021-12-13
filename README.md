@@ -1,9 +1,9 @@
 # dotfiles
+[My old dotfiles ran vim in docker](https://github.com/johnnymo87/dev-box), but now I'm going with the traditional route of installing everything locally.
 
-I'm turning away from [running vim in docker](https://github.com/johnnymo87/dev-box), and going with the traditional route of installing it locally.
+My dotfiles mostly deal with three things: vim, tmux, and bash. See [the "Adding new things" section](adding-new-things) for more detail about how I manage the files for these things.
 
 ## Installation
-
 Use the OS's recommended package manager to install or update everything mentioned below.
 
 1. If on a mac, [install homebrew](https://brew.sh/) for use as a package manager.
@@ -37,11 +37,18 @@ Use the OS's recommended package manager to install or update everything mention
      ```
 
 ## Adding new things
-I use Vim's built-in package management, see `:help packages`. New vim plugins need to be submoduled in `.vim/pack/foo/start/`.
+### For vim
+I use Vim's built-in package management, see `:help packages`. I submodule all vim plugins in `.vim/pack/foo/start/`. So to add a new vim plugin, do:
 ```
 git submodule add <git@github ...> .vim/pack/foo/start/my-new-vim-plugin
 ```
+To initialize existing submodules (for example, if new ones appear after getting a fresh checkout from `origin`):
+```
+git submodule update --init --recursive
+```
 
-New tmux plugins are automatically cloned by `tpm`, so no need to do anything for them.
+### For tmux
+I use [`tpm`](https://github.com/tmux-plugins/tpm) for tmux plugins. So to add a new plugin, simply add a `set -g @plugin '...'` reference to the top of the `.tmux.conf` file, and press `prefix` + <kbd>I</kbd> (capital i, as in **I**nstall) to fetch the plugin.
 
+### For bash
 New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be executable, so do `chmod +x .bashrc.d/*.bashrc` after adding a new one.
