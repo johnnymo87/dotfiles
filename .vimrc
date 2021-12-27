@@ -126,52 +126,13 @@ nnoremap Y y$
 " ==============================
 " Window/Tab/Split Manipulation
 " ==============================
-" Move between split windows by using the four directions H, L, I, N
+" Move between split windows by using the four directions H, J, K, L
 nnoremap <silent> <C-h> <C-w>h
 nnoremap <silent> <C-l> <C-w>l
 nnoremap <silent> <C-k> <C-w>k
 nnoremap <silent> <C-j> <C-w>j
 
-" In normal mode or in insert mode, press Alt-j to move the current line down,
-" or press Alt-k to move the current line up.
-"
-" After visually selecting a block of lines (for example, by pressing V then
-" moving the cursor down), press Alt-j to move the whole block down, or press
-" Alt-k to move the block up.
-
-" Mac
-nnoremap ∆ :m .+1<CR>==
-nnoremap ˚ :m .-2<CR>==
-inoremap ∆ > <Esc>:m .+1<CR>==gi
-inoremap ˚ <Esc>:m .-2<CR>==gi
-vnoremap ∆ :m '>+1<CR>gv=gv
-vnoremap ˚ :m '<-2<CR>gv=gv
-
-" Linux
-nnoremap <A-j> :m .+1<CR>==
-nnoremap <A-k> :m .-2<CR>==
-inoremap <A-j> <Esc>:m .+1<CR>==gi
-inoremap <A-k> <Esc>:m .-2<CR>==gi
-vnoremap <A-j> :m '>+1<CR>gv=gv
-vnoremap <A-k> :m '<-2<CR>gv=gv
-
-" ================ Ruby ========================
-
-nnoremap <leader>db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
-
-function! RunSpec(runner, fileAndLineNumber)
-  exe 'wa'
-  exe a:runner . ' rspec ' . a:fileAndLineNumber . ' --format documentation --color'
-endfunction
-
-function! RunCuke(runner, fileAndLineNumber)
-  exe 'wa'
-  exe a:runner . ' cucumber ' . a:fileAndLineNumber . ' -r features/'
-endfunction
-
-function! StripLineNumber(fileAndLineNumber)
-  return substitute(a:fileAndLineNumber, '\(:.*\)', '', '')
-endfunction
+" ==== Split things over new lines
 
 function! OpenParens()
   s:(:(\r
@@ -193,35 +154,12 @@ endfunction
 
 nnoremap <leader>1s :call OpenCurlies()<CR>
 
-function! FindSourceOrSpec()
-  if match(@%, '\v^app/assets/javascripts/') != -1
-    return substitute(@%, '\v^(app/assets/javascripts/)(.*)(\.es6)$', 'app/assets/test/\2.spec.es6', '')
-  elseif match(@%, '\v\.spec\.es6') != -1
-    return substitute(@%, '\v^(app/assets/test/)(.*)(\.spec\.es6)$', 'app/assets/javascripts/\2.es6', '')
-  elseif match(@%, '\v_spec\.rb') != -1
-    return substitute(@%, '\v^(spec)(.*)(_spec\.rb)$', 'app\2.rb', '')
-  elseif match(@%, '\v^app.*\.rb') != -1
-    return substitute(@%, '\v^(app)(.*)(\.rb)$', 'spec\2_spec.rb', '')
-  endif
-endfunction
-
 nnoremap ,1x :call SplitPairOverNewline()<CR>
 
 function! SplitPairOverNewline()
   normal a
   normal k$%i
 endfunction
-
-
-nnoremap <leader>ss :exe 'vsp ' . FindSourceOrSpec()<CR>
-
-nnoremap <leader>oo :let @f= @% . ':' . line('.')<CR>
-nnoremap <leader>0p :call RunSpec('!', @f)<CR>
-nnoremap <leader>9p :call RunSpec('!', StripLineNumber(@f))<CR>
-
-nnoremap <leader>uu :let @g= @% . ':' . line('.')<CR>
-nnoremap <leader>0i :call RunCuke('!', @g)<CR>
-nnoremap <leader>9i :call RunCuke('!', StripLineNumber(@g))<CR>
 
 
 " ==== gruvbox
@@ -244,32 +182,22 @@ nnoremap <leader>gg :Rg ""<left>
 
 " ==== Fuzzy finder CtrlP
 nnoremap <silent> <leader>t :CtrlP<CR>
-let g:ctrlp_custom_ignore = 'node_modules\|git'
-
-" ==== YouCompleteMe
-" Jump to definition
-nnoremap <leader>jd :YcmCompleter GoTo<CR>
-
-" associate *.es6 with javascript filetype
-au BufRead,BufNewFile *.es6 set filetype=javascript
-
-" associate *.json with json filetype
-au BufRead,BufNewFile *.json set filetype=json
-
-" use jsx syntax plugin on non-.jsx files
-let g:jsx_ext_required = 0
+let g:ctrlp_custom_ignore = 'git'
 
 " ==== Syntastic
-" use custom js linter from https://github.com/jaxbot/syntastic-react
-let g:syntastic_javascript_checkers = ['eslint']
-let g:syntastic_json_checkers=['jsonlint']
-" disable syntastic checks in handlebar templates
-" https://github.com/vim-syntastic/syntastic/issues/240
-let syntastic_mode_map = { 'passive_filetypes': ['html'] }
-" Use python 3
-let g:syntastic_python_python_exec = 'python3'
-let g:syntastic_python_checkers = ['python']
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
 
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+" Use clang-tidy for C++
+let g:syntastic_cpp_checkers = ['clang-tidy']
+let g:syntastic_cpp_clang_tidy_args = ['-p ~/Code/llvm-project/llvm']
+
+" Project specific .vimrc files
 " https://andrew.stwrt.ca/posts/project-specific-vimrc/
 set exrc
 set secure
