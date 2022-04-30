@@ -33,6 +33,7 @@ Use the OS's recommended package manager to install or update everything mention
    * Compile YouCompleteMe
      ```
      cd .vim/pack/foo/start/YouCompleteMe
+     git pull --recurse-submodules origin master
      python3 install.py --all --verbose
      ```
 
