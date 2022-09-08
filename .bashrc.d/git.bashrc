@@ -12,3 +12,7 @@ function gcom () {
 function filesAt () {
   git show HEAD~$1 --name-status | grep "^[M|A]\t" | awk '{ print $2 '}
 }
+
+function filesStaged () {
+  gd --cached --name-status | grep "^[M|A]\t" | awk '{ print $2 '}
+}
