@@ -223,6 +223,10 @@ nnoremap <leader>uu :let @g= @% . ':' . line('.')<CR>
 nnoremap <leader>0i :call RunCuke('!', @g)<CR>
 nnoremap <leader>9i :call RunCuke('!', StripLineNumber(@g))<CR>
 
+function! RunSpec(runner, fileAndLineNumber)
+  exe 'wa'
+  exe a:runner . ' rspec ' . a:fileAndLineNumber . ' --format documentation --color'
+endfunction
 
 " ==== gruvbox
 " Switch to dark color scheme
