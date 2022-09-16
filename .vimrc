@@ -123,38 +123,6 @@ nnoremap <leader>s :%s/\s\+$//e<CR> " strip trailing whitespaces
 "make Y consistent with C and D
 nnoremap Y y$
 
-" ==============================
-" Window/Tab/Split Manipulation
-" ==============================
-" Move between split windows by using the four directions H, L, I, N
-nnoremap <silent> <C-h> <C-w>h
-nnoremap <silent> <C-l> <C-w>l
-nnoremap <silent> <C-k> <C-w>k
-nnoremap <silent> <C-j> <C-w>j
-
-" In normal mode or in insert mode, press Alt-j to move the current line down,
-" or press Alt-k to move the current line up.
-"
-" After visually selecting a block of lines (for example, by pressing V then
-" moving the cursor down), press Alt-j to move the whole block down, or press
-" Alt-k to move the block up.
-
-" Mac
-nnoremap ∆ :m .+1<CR>==
-nnoremap ˚ :m .-2<CR>==
-inoremap ∆ > <Esc>:m .+1<CR>==gi
-inoremap ˚ <Esc>:m .-2<CR>==gi
-vnoremap ∆ :m '>+1<CR>gv=gv
-vnoremap ˚ :m '<-2<CR>gv=gv
-
-" Linux
-nnoremap <A-j> :m .+1<CR>==
-nnoremap <A-k> :m .-2<CR>==
-inoremap <A-j> <Esc>:m .+1<CR>==gi
-inoremap <A-k> <Esc>:m .-2<CR>==gi
-vnoremap <A-j> :m '>+1<CR>gv=gv
-vnoremap <A-k> :m '<-2<CR>gv=gv
-
 " ================ Ruby ========================
 
 nnoremap <leader>db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
