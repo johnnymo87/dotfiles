@@ -38,6 +38,8 @@ Use the OS's recommended package manager to install or update everything mention
 
 1. Install [pyenv](https://github.com/pyenv/pyenv) or delete `.bashrc.d/py.bashrc`.
 
+1. Install [rbenv](https://github.com/rbenv/rbenv) or delete `.bashrc.d/rb.bashrc`.
+
 1. Install rust or delete `.bashrc.d/rust.bashrc`.
    ```
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
