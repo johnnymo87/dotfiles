@@ -37,6 +37,8 @@ Use the OS's recommended package manager to install or update everything mention
      python3 install.py --all --verbose
      ```
 
+1. Install [pyenv](https://github.com/pyenv/pyenv) or delete `.bashrc.d/py.bashrc`.
+
 ## Adding new things
 ### For vim
 I use Vim's built-in package management, see `:help packages`. I submodule all vim plugins in `.vim/pack/foo/start/`. So to add a new vim plugin, do:
