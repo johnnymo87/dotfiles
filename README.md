@@ -17,7 +17,6 @@ Use the OS's recommended package manager to install or update everything mention
 1. Because this repository uses git submodules, clone it recusively: `git clone --recurse-submodules git@github.com:johnnymo87/dotfiles.git`. Then `cd dotfiles`.
 
 1. Symlink the necessary files to `~`.
-
    ```
    for x in .bash_profile .bashrc .bashrc.d .gitconfig .tmux.conf .tmux .vim .vimrc; do ln -sf $(pwd)/$x ~/$x; done
    ```
@@ -38,6 +37,11 @@ Use the OS's recommended package manager to install or update everything mention
      ```
 
 1. Install [pyenv](https://github.com/pyenv/pyenv) or delete `.bashrc.d/py.bashrc`.
+
+1. Install rust or delete `.bashrc.d/rust.bashrc`.
+   ```
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
 
 ## Adding new things
 ### For vim
