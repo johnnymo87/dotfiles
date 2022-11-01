@@ -45,6 +45,9 @@ Use the OS's recommended package manager to install or update everything mention
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 
+1. For a prettier shell prompt, install one of these [Nerd Fonts](https://www.nerdfonts.com/font-downloads) and [Starship](https://starship.rs/).
+   * E.g. I'm currently using `font-fira-code-nerd-font`.
+
 ## Adding new things
 ### For vim
 I use Vim's built-in package management, see `:help packages`. I submodule all vim plugins in `.vim/pack/foo/start/`. So to add a new vim plugin, do:
