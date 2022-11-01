@@ -129,12 +129,8 @@ nnoremap <leader>db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
 
 function! RunSpec(runner, fileAndLineNumber)
   exe 'wa'
-  exe a:runner . ' rspec ' . a:fileAndLineNumber . ' --format documentation --color'
-endfunction
-
-function! RunCuke(runner, fileAndLineNumber)
-  exe 'wa'
-  exe a:runner . ' cucumber ' . a:fileAndLineNumber . ' -r features/'
+  exe a:runner . ' bundle exec rspec --format documentation --fail-fast ' . a:fileAndLineNumber
+  exe 'let @s= bufnr("%")'
 endfunction
 
 function! StripLineNumber(fileAndLineNumber)
@@ -184,17 +180,11 @@ endfunction
 nnoremap <leader>ss :exe 'vsp ' . FindSourceOrSpec()<CR>
 
 nnoremap <leader>oo :let @f= @% . ':' . line('.')<CR>
-nnoremap <leader>0p :call RunSpec('!', @f)<CR>
-nnoremap <leader>9p :call RunSpec('!', StripLineNumber(@f))<CR>
+nnoremap <leader>0p :call RunSpec(':vertical terminal', @f)<CR>
+nnoremap <leader>9p :call RunSpec(':vertical terminal', StripLineNumber(@f))<CR>
 
-nnoremap <leader>uu :let @g= @% . ':' . line('.')<CR>
-nnoremap <leader>0i :call RunCuke('!', @g)<CR>
-nnoremap <leader>9i :call RunCuke('!', StripLineNumber(@g))<CR>
-
-function! RunSpec(runner, fileAndLineNumber)
-  exe 'wa'
-  exe a:runner . ' rspec ' . a:fileAndLineNumber . ' --format documentation --color'
-endfunction
+" Close the buffers left open by RunSpec.
+nnoremap <leader>kp :bdelete! <C-r>s<CR>
 
 " ==== gruvbox
 " Switch to dark color scheme
