@@ -104,7 +104,7 @@ syntax enable " Enable syntax highlighting
 
 " A visual guide for my column soft and hard limits
 highlight ColorColumn ctermbg=235 guibg=#2c2d27
-set colorcolumn=79,120
+set colorcolumn=80,121
 
 " TODO Don't lose clipboard when quitting/suspending vim
 " https://stackoverflow.com/questions/6453595/prevent-vim-from-clearing-the-clipboard-on-exit
