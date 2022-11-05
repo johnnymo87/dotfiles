@@ -36,6 +36,8 @@ Use the OS's recommended package manager to install or update everything mention
      python3 install.py --all --verbose
      ```
 
+1. Install [direnv](https://github.com/direnv/direnv) or delete `.bashrc.d/direnv.bashrc`.
+
 1. Install [pyenv](https://github.com/pyenv/pyenv) or delete `.bashrc.d/py.bashrc`.
 
 1. Install [rbenv](https://github.com/rbenv/rbenv) or delete `.bashrc.d/rb.bashrc`.
