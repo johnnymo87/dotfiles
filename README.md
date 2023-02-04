@@ -39,6 +39,7 @@ Use the OS's recommended package manager to install or update everything mention
 1. Install [direnv](https://github.com/direnv/direnv) or delete `.bashrc.d/direnv.bashrc`.
 
 1. Install [pyenv](https://github.com/pyenv/pyenv) or delete `.bashrc.d/py.bashrc`.
+   * For data science things, consider installing [miniconda](https://docs.conda.io/en/latest/miniconda.html) as well. After installing, run `conda init`. This will modify some general rc files (e.g. `.bash_profile`). Relocate these changes to `.bashrc.d/conda.private.bashrc`. (This configuration is shell- and installation-specific, so we don't check it into version control.)
 
 1. Install [rbenv](https://github.com/rbenv/rbenv) or delete `.bashrc.d/rb.bashrc`.
 
