@@ -114,77 +114,14 @@ set clipboard^=unnamed,unnamedplus "Use system clipboard by default
 set showcmd "Show key presses in normal mode
 set iskeyword-=_ "recognize underscore as word break
 
-nnoremap <leader>l :update<cr>
+" Copy current file's path to system buffer.
+nnoremap <leader>cp :let @+=@%<CR>
 
-nnoremap <leader>cp :let @+=@%<CR> " copy current file's path to system buffer
+" Strip trailing whitespaces.
+nnoremap <leader>s :%s/\s\+$//e<CR>
 
-nnoremap <leader>s :%s/\s\+$//e<CR> " strip trailing whitespaces
-
-"make Y consistent with C and D
+" Make Y consistent with C and D.
 nnoremap Y y$
-
-" ================ Ruby ========================
-
-nnoremap <leader>db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
-
-function! RunSpec(runner, fileAndLineNumber)
-  exe 'wa'
-  exe a:runner . ' bundle exec rspec --format documentation --fail-fast ' . a:fileAndLineNumber
-  exe 'let @s= bufnr("%")'
-endfunction
-
-function! StripLineNumber(fileAndLineNumber)
-  return substitute(a:fileAndLineNumber, '\(:.*\)', '', '')
-endfunction
-
-function! OpenParens()
-  s:(:(\r
-  s:):\r)
-  normal k
-  s:,:,\r:g
-  noh
-  normal jv%=
-endfunction
-
-nnoremap <leader>1w :call OpenParens()<CR>
-
-function! OpenCurlies()
-  s:{:do\r:
-  s: }:\rend:
-  normal Vkk=jj
-  noh
-endfunction
-
-nnoremap <leader>1s :call OpenCurlies()<CR>
-
-function! FindSourceOrSpec()
-  if match(@%, '\v^app/assets/javascripts/') != -1
-    return substitute(@%, '\v^(app/assets/javascripts/)(.*)(\.es6)$', 'app/assets/test/\2.spec.es6', '')
-  elseif match(@%, '\v\.spec\.es6') != -1
-    return substitute(@%, '\v^(app/assets/test/)(.*)(\.spec\.es6)$', 'app/assets/javascripts/\2.es6', '')
-  elseif match(@%, '\v_spec\.rb') != -1
-    return substitute(@%, '\v^(spec)(.*)(_spec\.rb)$', 'app\2.rb', '')
-  elseif match(@%, '\v^app.*\.rb') != -1
-    return substitute(@%, '\v^(app)(.*)(\.rb)$', 'spec\2_spec.rb', '')
-  endif
-endfunction
-
-nnoremap ,1x :call SplitPairOverNewline()<CR>
-
-function! SplitPairOverNewline()
-  normal a
-  normal k$%i
-endfunction
-
-
-nnoremap <leader>ss :exe 'vsp ' . FindSourceOrSpec()<CR>
-
-nnoremap <leader>oo :let @f= @% . ':' . line('.')<CR>
-nnoremap <leader>0p :call RunSpec(':vertical terminal', @f)<CR>
-nnoremap <leader>9p :call RunSpec(':vertical terminal', StripLineNumber(@f))<CR>
-
-" Close the buffers left open by RunSpec.
-nnoremap <leader>kp :bdelete! <C-r>s<CR>
 
 " ==== gruvbox
 " Switch to dark color scheme
