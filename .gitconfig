@@ -38,3 +38,5 @@
   name = Jonathan Mohrbacher
 [pull]
 	rebase = true
+[credential]
+	helper = store
