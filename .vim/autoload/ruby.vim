@@ -1,4 +1,6 @@
 " Run RSpec.
+" Save buffer number to register s, so that we can reference it later when we
+" want to delete this buffer.
 function! ruby#RunSpec(runner, fileAndLineNumber)
   exe 'wa'
   exe a:runner . ' bundle exec rspec --format documentation --fail-fast ' . a:fileAndLineNumber
@@ -6,15 +8,12 @@ function! ruby#RunSpec(runner, fileAndLineNumber)
 endfunction
 
 " Run cucumber.
+" Save buffer number to register s, so that we can reference it later when we
+" want to delete this buffer.
 function! ruby#RunCuke(runner, fileAndLineNumber)
   exe 'wa'
   exe a:runner . ' bundle exec cucumber --publish-quiet ' . a:fileAndLineNumber
   exe 'let @s= bufnr("%")'
-endfunction
-
-" For the variation of RunSpec or RunCuke that runs the whole file.
-function! ruby#StripLineNumber(fileAndLineNumber)
-  return substitute(a:fileAndLineNumber, '\(:.*\)', '', '')
 endfunction
 
 " Transform parens from single-line to multi-line.
