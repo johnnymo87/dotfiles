@@ -123,6 +123,10 @@ nnoremap <leader>s :%s/\s\+$//e<CR>
 " Make Y consistent with C and D.
 nnoremap Y y$
 
+" `matchit.vim` is built-in so let's enable it!
+" Hit `%` on `if` to jump to `else`.
+runtime macros/matchit.vim
+
 " ==== gruvbox
 " Switch to dark color scheme
 set background=dark
