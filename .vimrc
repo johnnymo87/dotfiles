@@ -123,6 +123,10 @@ nnoremap <leader>s :%s/\s\+$//e<CR>
 " Make Y consistent with C and D.
 nnoremap Y y$
 
+" Simplify getting back to Normal mode after entering Terminal in Insert mode.
+" Map it to Ctrl-w a, which isn't mapped to anything by default.
+tnoremap <C-W>a <C-\><C-n>
+
 " `matchit.vim` is built-in so let's enable it!
 " Hit `%` on `if` to jump to `else`.
 runtime macros/matchit.vim
