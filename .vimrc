@@ -70,7 +70,7 @@ filetype plugin on " Enable filetype-specific plugins
 let mapleader=","
 
 " Display tabs and trailing spaces visually
-set list listchars=tab:\ \ ,trail:·
+set list listchars=tab:▷▷⋮,trail:·
 
 set number       "Line numbers are good
 set backspace=indent,eol,start  "Allow backspace in insert mode
