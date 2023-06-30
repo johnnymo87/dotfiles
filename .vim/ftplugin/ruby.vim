@@ -7,9 +7,6 @@ nnoremap <buffer> <leader>1w :call ruby#OpenParens()<CR>
 " Transform curlies into do/end block.
 nnoremap <buffer> <leader>1s :call ruby#OpenCurlies()<CR>
 
-" ?
-nnoremap <buffer> <leader>1x :call ruby#SplitPairOverNewline()<CR>
-
 " Open source/spec file respective pair in vertical pane.
 nnoremap <buffer> <leader>ss :exe 'vsp ' . ruby#FindSourceOrSpec()<CR>
 

@@ -34,12 +34,6 @@ function! ruby#OpenCurlies()
   noh
 endfunction
 
-" ?
-function! ruby#SplitPairOverNewline()
-  normal a
-  normal k$%i
-endfunction
-
 " Find source/spec file respective pair.
 function! ruby#FindSourceOrSpec()
   if match(@%, '\v^app/assets/javascripts/') != -1
