@@ -54,6 +54,9 @@ nnoremap <leader>cp :let @+=@%<CR>
 " Jump-start a vim-ripgrep search.
 nnoremap <leader>rr :Rg ""<left>
 
+" Jump-start a :Git (Fugitive) command.
+nnoremap <leader>gg :Git 
+
 " Don't wrap lines by default.
 set nowrap
 
