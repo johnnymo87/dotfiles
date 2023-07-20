@@ -51,6 +51,9 @@ tnoremap <C-W>a <C-\><C-n>
 " Copy current file's path to system buffer.
 nnoremap <leader>cp :let @+=@%<CR>
 
+" Jump-start a vim-ripgrep search.
+nnoremap <leader>rr :Rg ""<left>
+
 " Don't wrap lines by default.
 set nowrap
 
