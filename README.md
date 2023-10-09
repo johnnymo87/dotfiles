@@ -47,6 +47,23 @@ Use the OS's recommended package manager to install or update everything mention
    ```
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
+1. For Elixir:
+   * If you don't want Elixir, just delete `.bashrc.d/asdf.bashrc`.
+   * Otherwise, [install asdf](https://asdf-vm.com/guide/getting-started.html).
+   * Install Elixir with asdf.
+     ```
+     asdf plugin add elixir
+     asdf install elixir latest
+     ```
+   * Install Erlang with asdf.
+     ```
+     asdf plugin add erlang
+     asdf install erlang latest
+     ```
+   * Install mix.
+     ```
+     mix local.hex
+     ```
 
 1. For a prettier shell prompt, install one of these [Nerd Fonts](https://www.nerdfonts.com/font-downloads) and [Starship](https://starship.rs/).
    * E.g. I'm currently using `font-fira-code-nerd-font`.
