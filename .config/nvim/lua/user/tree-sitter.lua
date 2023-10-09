@@ -1,0 +1,16 @@
+-- From https://github.com/nvim-treesitter/nvim-treesitter#adding-parsers
+-- Configures a parser for a cucumber feature file. Assumes that the parser is
+-- installed in ~/Code/tree-sitter-gherkin.
+-- local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+-- parser_config.cucumber = {
+--   install_info = {
+--     url = "~/Code/tree-sitter-gherkin", -- local path or git repo
+--     files = {"src/parser.c"}, -- note that some parsers also require src/scanner.c or src/scanner.cc
+--     -- optional entries:
+--     branch = "main", -- default branch in case of git repo if different from master
+--     generate_requires_npm = false, -- if stand-alone parser without npm dependencies
+--     requires_generate_from_grammar = false, -- if folder contains pre-generated src/parser.c
+--   },
+--   filetype = "feature", -- if filetype does not match the parser name
+-- }
+-- Blocked by https://github.com/binhtran432k/tree-sitter-gherkin/issues/4
