@@ -18,7 +18,7 @@ Use the OS's recommended package manager to install or update everything mention
 
 1. Symlink the necessary files to `~`.
    ```
-   for x in .bash_profile .bashrc .bashrc.d .gitconfig .gitignore_global .tmux.conf .tmux .vim .vimrc; do ln -sf $(pwd)/$x ~/$x; done
+   for x in .bash_profile .bashrc .bashrc.d .config/nvim .gitconfig .gitignore_global .tmux.conf .tmux; do ln -sf $(pwd)/$x ~/$x; done
    ```
 
 1. Install tmux.

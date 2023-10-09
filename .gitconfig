@@ -20,7 +20,7 @@
   default = current
 [core]
   autocrlf = false
-  editor = vim
+  editor = nvim
   # to make IO-intensive commands like `git status` faster on NFS
   # http://stackoverflow.com/a/4995189
   preloadindex = true
