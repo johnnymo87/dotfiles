@@ -3,7 +3,8 @@
 set iskeyword-=_
 
 " Shortcut for setting a debugger.
-nnoremap <buffer> <leader>db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
+" nnoremap <buffer> <leader>db :normal orequire 'pry'; ::Kernel.binding.pry<ESC>
+nnoremap <buffer> <leader>db :normal orequire 'debug'; binding.break<ESC>
 
 " Transform parens from single-line to multi-line.
 nnoremap <buffer> <leader>1w :call ruby#OpenParens()<CR>
