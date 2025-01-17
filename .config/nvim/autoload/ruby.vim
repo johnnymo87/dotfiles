@@ -4,7 +4,7 @@
 " we want to delete this buffer.
 function! ruby#RunSpec(runner, fileAndLineNumber)
   exe 'wa'
-  exe a:runner . ' bundle exec rspec --format documentation --fail-fast ' . a:fileAndLineNumber
+  exe a:runner . ' bundle exec rspec --format documentation --fail-fast --order defined ' . a:fileAndLineNumber
   exe 'let @s= bufnr("%")'
 endfunction
 
