@@ -1,19 +1,37 @@
-" Run RSpec.
-" Save buffer number to register s, so that we can reference it later when we
-" want to delete this buffer.
+" Runs RSpec at the specified file and line number.
+"
+" Saves buffer number to register `s`, so that we can reference it later when
+" we want to delete this buffer.
 function! ruby#RunSpec(runner, fileAndLineNumber)
   exe 'wa'
   exe a:runner . ' bundle exec rspec --format documentation --fail-fast ' . a:fileAndLineNumber
   exe 'let @s= bufnr("%")'
 endfunction
 
-" Run cucumber.
-" Save buffer number to register s, so that we can reference it later when we
-" want to delete this buffer.
+" Runs cucumber at the specified file and line number.
+"
+" Saves buffer number to register `s`, so that we can reference it later when
+" we want to delete this buffer.
 function! ruby#RunCuke(runner, fileAndLineNumber)
   exe 'wa'
   exe a:runner . ' bundle exec cucumber --publish-quiet ' . a:fileAndLineNumber
   exe 'let @s= bufnr("%")'
+endfunction
+
+" Returns the file and line number of global mark `T`.
+"
+" Throws if the global mark `T` is not set.
+function! ruby#GetTestFileAndLineNumber()
+  let l:t_marks = filter(getmarklist(), "v:val.mark == \"'T\"")
+  if empty(l:t_marks)
+    throw "Global mark 'T' not set. Use <leader>cfl to set the test location."
+  endif
+
+  let l:t_mark = l:t_marks[0]
+  let l:filename = l:t_mark.file
+  let l:line_number = l:t_mark.pos[1]
+
+  return l:filename . ':' . l:line_number
 endfunction
 
 " Transform parens from single-line to multi-line.

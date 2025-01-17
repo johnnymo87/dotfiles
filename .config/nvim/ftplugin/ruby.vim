@@ -18,20 +18,17 @@ nnoremap <buffer> <leader>1x :call ruby#SplitPairOverNewline()<CR>
 " Open source/spec file respective pair in vertical pane.
 nnoremap <buffer> <leader>ss :exe 'vsp ' . ruby#FindSourceOrSpec()<CR>
 
-" 'Copy File' into a register for use in RunSpec and RunCuke.
-nnoremap <buffer> <leader>cf :let @f= @%<CR>
-" 'Copy File & Line' into a register for use in RunSpec and RunCuke.
-nnoremap <buffer> <leader>cfl :let @f= @% . ':' . line('.')<CR>
+" Map 'rsv' to run rSpec in a Vertical terminal at the line of global mark 'T'.
+nnoremap <buffer> <leader>rsv :call ruby#RunSpec(':vsplit\|:terminal', ruby#GetTestFileAndLineNumber())<CR>
 
-" Map 'rsv' to mean 'Run rSpec in a Vertical terminal'.
-nnoremap <buffer> <leader>rsv :call ruby#RunSpec(':vsplit\|:terminal', @f)<CR>
-" Map 'rsh' to mean 'Run rSpec in a Horizontal terminal'.
-nnoremap <buffer> <leader>rsh :call ruby#RunSpec(':split\|:terminal', @f)<CR>
+" Map 'rsh' to run rSpec in a Horizontal terminal at the line of global mark 'T'.
+nnoremap <buffer> <leader>rsh :call ruby#RunSpec(':split\|:terminal', ruby#GetTestFileAndLineNumber())<CR>
 
-" Map 'rcv' to mean 'Run Cuke in a Vertical terminal'.
-nnoremap <buffer> <leader>rcv :call ruby#RunCuke(':vsplit\|:terminal', @f)<CR>
-" Map 'rch' to mean 'Run Cuke in a Horizontal terminal'.
-nnoremap <buffer> <leader>rch :call ruby#RunCuke(':split\|:terminal', @f)<CR>
+" Map 'rcv' to run Cucumber in a Vertical terminal at the line of global mark 'T'.
+nnoremap <buffer> <leader>rcv :call ruby#RunCuke(':vsplit\|:terminal', ruby#GetTestFileAndLineNumber())<CR>
+
+" Map 'rch' to run Cucumber in a Horizontal terminal at the line of global mark 'T'.
+nnoremap <buffer> <leader>rch :call ruby#RunCuke(':split\|:terminal', ruby#GetTestFileAndLineNumber())<CR>
 
 " Map 'bdt' to mean 'Buffer Delete Test'.
 " Closes the buffers left open by RunSpec or RunCuke.
