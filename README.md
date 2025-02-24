@@ -48,8 +48,7 @@ Use the OS's recommended package manager to install or update everything mention
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 1. For Elixir:
-   * If you don't want Elixir, just delete `.bashrc.d/asdf.bashrc`.
-   * Otherwise, [install asdf](https://asdf-vm.com/guide/getting-started.html).
+   * [Install asdf](https://asdf-vm.com/guide/getting-started.html).
    * Install Elixir with asdf.
      ```
      asdf plugin add elixir
