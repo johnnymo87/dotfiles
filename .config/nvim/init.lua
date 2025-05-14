@@ -6,6 +6,7 @@ require("user.mappings")
 require("config.lazy")
 
 -- Load configuration for plugins.
+require("user.confluence")
 require("user.cursor_highlight")
 -- require("user.difftool").setup()
 require("user.telescope")
