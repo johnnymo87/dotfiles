@@ -1,9 +1,162 @@
 local M = {}
 
--- Function to fetch Confluence page content
-function M.fetch_page_content(page_id)
-  if not page_id or page_id == "" then
-    vim.notify("Error: Page ID is required.", vim.log.levels.ERROR)
+-- Helper function to convert HTML to Markdown
+local function html_to_markdown(html_content)
+  if not html_content or html_content == "" then
+    return ""
+  end
+
+  local markdown_content = vim.fn.system({"html2markdown"}, html_content)
+  if vim.v.shell_error ~= 0 then
+    vim.notify(
+      "Error converting HTML to Markdown. Shell error: " .. vim.v.shell_error ..
+      ". Output: " .. markdown_content,
+      vim.log.levels.ERROR
+    )
+    return "Error converting content to Markdown."
+  end
+
+  return markdown_content
+end
+
+-- Helper function to format comments with XML-style nesting
+local function format_comments(comments, indent_level)
+  local indent_level = indent_level or 0
+  local indent = string.rep("  ", indent_level)
+  local lines = {}
+
+  for _, comment in ipairs(comments) do
+    table.insert(lines, indent .. "<comment>")
+    table.insert(lines, "")
+
+    -- Author and timestamp
+    local author = comment.author and comment.author.displayName or "Unknown"
+    local timestamp = comment.created or "Unknown time"
+    table.insert(lines, indent .. "  " .. author .. " (" .. timestamp .. ")")
+
+    -- Convert comment body HTML to markdown
+    local body_html = ""
+    if comment.renderedBody then
+      body_html = comment.renderedBody
+    elseif comment.body and comment.body.content then
+      -- Handle the case where we have structured body content
+      -- For now, fallback to a simple representation
+      body_html = "Comment body (structured format not fully supported)"
+    end
+
+    local body_markdown = html_to_markdown(body_html)
+    local body_lines = vim.split(body_markdown, "\n", {plain = true})
+
+    for _, line in ipairs(body_lines) do
+      table.insert(lines, indent .. "  " .. line)
+    end
+
+    table.insert(lines, "")
+
+    -- Handle replies (if this comment has a parentId, we'll handle nesting in the main function)
+
+    table.insert(lines, indent .. "</comment>")
+  end
+
+  return lines
+end
+
+-- Helper function to get comment parent information
+local function get_comment_parent(comment_id, comment_type, email, api_token)
+  local endpoint = comment_type == "ConfluenceInlineComment" and "inline-comments" or "footer-comments"
+  local command = string.format(
+    "curl --fail --silent --show-error --request GET " ..
+    "--url 'https://wonder.atlassian.net/wiki/api/v2/%s/%s' " ..
+    "--user '%s:%s' " ..
+    "--header 'Accept: application/json' " ..
+    "| jq -r '.parentCommentId // \"null\"'",
+    endpoint,
+    comment_id,
+    email,
+    api_token
+  )
+  
+  local output = vim.fn.system(command)
+  if vim.v.shell_error ~= 0 then
+    return nil
+  end
+  
+  local parent_id = vim.trim(output)
+  return parent_id ~= "null" and parent_id or nil
+end
+
+-- Helper function to build comment hierarchy
+local function build_comment_hierarchy(comments, email, api_token)
+  local comment_map = {}
+  local roots = {}
+  
+  -- First pass: create comment map and get parent info
+  for _, comment in ipairs(comments) do
+    comment_map[comment.commentId] = {
+      id = comment.commentId,
+      type = comment.__typename,
+      author = comment.author.user.name,
+      body = comment.body.editor.value,
+      children = {}
+    }
+  end
+  
+  -- Second pass: build hierarchy
+  for _, comment in ipairs(comments) do
+    local parent_id = get_comment_parent(comment.commentId, comment.__typename, email, api_token)
+    local comment_data = comment_map[comment.commentId]
+    
+    if parent_id and comment_map[parent_id] then
+      table.insert(comment_map[parent_id].children, comment_data)
+    else
+      table.insert(roots, comment_data)
+    end
+  end
+  
+  return roots
+end
+
+-- Helper function to format confluence comments with hierarchy
+local function format_confluence_comments(comments, indent_level)
+  local indent_level = indent_level or 0
+  local indent = string.rep("  ", indent_level)
+  local lines = {}
+
+  for _, comment in ipairs(comments) do
+    table.insert(lines, indent .. "<comment>")
+    table.insert(lines, "")
+
+    -- Author and comment ID
+    table.insert(lines, indent .. "  " .. comment.author .. " (Comment ID: " .. comment.id .. ")")
+
+    -- Convert comment body HTML to markdown
+    local body_markdown = html_to_markdown(comment.body)
+    local body_lines = vim.split(body_markdown, "\n", {plain = true})
+
+    for _, line in ipairs(body_lines) do
+      table.insert(lines, indent .. "  " .. line)
+    end
+
+    table.insert(lines, "")
+
+    -- Handle nested replies
+    if #comment.children > 0 then
+      local child_lines = format_confluence_comments(comment.children, indent_level + 1)
+      for _, line in ipairs(child_lines) do
+        table.insert(lines, line)
+      end
+    end
+
+    table.insert(lines, indent .. "</comment>")
+  end
+
+  return lines
+end
+
+-- Function to fetch Jira ticket content
+function M.fetch_jira_ticket(ticket_key)
+  if not ticket_key or ticket_key == "" then
+    vim.notify("Error: Ticket key is required.", vim.log.levels.ERROR)
     return
   end
 
@@ -13,7 +166,7 @@ function M.fetch_page_content(page_id)
     return
   end
 
-  -- Ensure curl, jq, and html2markdown are in PATH
+  -- Check dependencies
   if vim.fn.executable("curl") == 0 then
     vim.notify("Error: 'curl' command not found in PATH.", vim.log.levels.ERROR)
     return
@@ -27,80 +180,260 @@ function M.fetch_page_content(page_id)
     return
   end
 
-  local email = "jmohrbacher@wonder.com" -- Consider making this configurable if needed
+  local email = os.getenv("ATLASSIAN_EMAIL")
+  if not email or email == "" then
+    vim.notify("Error: ATLASSIAN_EMAIL environment variable is not set.", vim.log.levels.ERROR)
+    return
+  end
 
-  -- Construct the command string to fetch JSON data (title and body)
-  local fetch_json_command = string.format(
+  -- Fetch ticket data
+  local fetch_ticket_command = string.format(
     "curl --fail --silent --show-error --request GET " ..
-    "--url 'https://wonder.atlassian.net/wiki/api/v2/pages/%s?body-format=editor' " ..
+    "--url 'https://wonder.atlassian.net/rest/api/3/issue/%s?fields=key,summary,description&expand=renderedFields' " ..
     "--user '%s:%s' " ..
     "--header 'Accept: application/json' " ..
-    "| jq '{ \"title\": .title, \"body\": .body.editor.value }'",
-    page_id,
+    "| jq '{ \"key\": .key, \"summary\": .fields.summary, \"description\": .renderedFields.description }'",
+    ticket_key,
     email,
     api_token
   )
 
-  vim.notify("Fetching Confluence page data for " .. page_id .. "...", vim.log.levels.INFO)
+  vim.notify("Fetching Jira ticket data for " .. ticket_key .. "...", vim.log.levels.INFO)
 
-  -- Execute the command and capture its output
-  local json_str_output = vim.fn.system(fetch_json_command)
-
-  -- Check for shell errors (e.g., curl or jq command failure)
+  local ticket_output = vim.fn.system(fetch_ticket_command)
   if vim.v.shell_error ~= 0 then
     vim.notify(
-      "Error fetching page data from Confluence. Shell error: " .. vim.v.shell_error ..
-      ". Output: " .. json_str_output,
+      "Error fetching ticket data from Jira. Shell error: " .. vim.v.shell_error ..
+      ". Output: " .. ticket_output,
       vim.log.levels.ERROR
     )
     return
   end
 
-  if json_str_output == "" or json_str_output == nil then
-    vim.notify("Error: No data received from Confluence/jq.", vim.log.levels.ERROR)
+  -- Parse ticket JSON
+  local ok, ticket_data = pcall(vim.json.decode, ticket_output)
+  if not ok or type(ticket_data) ~= "table" then
+    vim.notify("Error: Failed to parse ticket JSON response: " .. (ticket_data or "Invalid JSON"), vim.log.levels.ERROR)
     return
   end
 
-  -- Parse the JSON response
-  local ok, data = pcall(vim.json.decode, json_str_output)
-  if not ok or type(data) ~= "table" then
-    vim.notify("Error: Failed to parse JSON response: " .. (data or "Invalid JSON"), vim.log.levels.ERROR)
-    vim.notify("Received: " .. json_str_output, vim.log.levels.DEBUG)
-    return
-  end
+  -- Fetch comments
+  local fetch_comments_command = string.format(
+    "curl --fail --silent --show-error --request GET " ..
+    "--url 'https://wonder.atlassian.net/rest/api/3/issue/%s/comment?expand=renderedBody' " ..
+    "--user '%s:%s' " ..
+    "--header 'Accept: application/json' " ..
+    "| jq '.comments'",
+    ticket_key,
+    email,
+    api_token
+  )
 
-  local title = data.title
-  local html_body = data.body
+  local comments_output = vim.fn.system(fetch_comments_command)
+  local comments_data = {}
 
-  -- Validate title
-  if not title or type(title) ~= "string" then
-    vim.notify("Error: Page title not found or invalid in response.", vim.log.levels.ERROR)
-    -- Optionally, you could decide to proceed without a title or return
-    title = "Title not found" -- Fallback title
-  end
-
-  -- Validate html_body
-  if not html_body or type(html_body) ~= "string" then
-    vim.notify("Warning: Page body not found or invalid in response. Body will be empty.", vim.log.levels.WARN)
-    html_body = "" -- Treat as empty body
-  end
-
-  -- Convert HTML body to Markdown
-  local markdown_body = ""
-  if html_body ~= "" then
-    local html2md_command_parts = {"html2markdown"}
-    -- Pass html_body as stdin to html2markdown
-    markdown_body = vim.fn.system(html2md_command_parts, html_body)
-    if vim.v.shell_error ~= 0 then
-      vim.notify(
-        "Error converting HTML to Markdown. Shell error: " .. vim.v.shell_error ..
-        ". Output: " .. markdown_body,
-        vim.log.levels.ERROR
-      )
-      markdown_body = "Error converting page body to Markdown." -- Fallback body content
+  if vim.v.shell_error == 0 then
+    local comments_ok, parsed_comments = pcall(vim.json.decode, comments_output)
+    if comments_ok and type(parsed_comments) == "table" then
+      comments_data = parsed_comments
+    else
+      vim.notify("Warning: Could not parse comments, continuing without them.", vim.log.levels.WARN)
     end
   else
-    vim.notify("Info: Confluence page body is empty.", vim.log.levels.INFO)
+    vim.notify("Warning: Could not fetch comments, continuing without them.", vim.log.levels.WARN)
+  end
+
+  -- Prepare content
+  local lines_to_insert = {}
+
+  -- Title line
+  local title = (ticket_data.key or "Unknown") .. " " .. (ticket_data.summary or "No summary")
+  table.insert(lines_to_insert, title)
+  table.insert(lines_to_insert, "")
+
+  -- Description
+  if ticket_data.description and ticket_data.description ~= "" then
+    local description_markdown = html_to_markdown(ticket_data.description)
+    local description_lines = vim.split(description_markdown, "\n", {plain = true})
+    for _, line in ipairs(description_lines) do
+      table.insert(lines_to_insert, line)
+    end
+  else
+    table.insert(lines_to_insert, "No description available.")
+  end
+
+  table.insert(lines_to_insert, "")
+
+  -- Comments section
+  if #comments_data > 0 then
+    table.insert(lines_to_insert, "<comments>")
+
+    -- Build comment hierarchy (simple approach - just list them in order for now)
+    -- TODO: Could enhance this to properly nest replies based on parentId
+    local comment_lines = format_comments(comments_data, 1)
+    for _, line in ipairs(comment_lines) do
+      table.insert(lines_to_insert, line)
+    end
+
+    table.insert(lines_to_insert, "</comments>")
+  end
+
+  -- Insert into buffer
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1
+  vim.api.nvim_buf_set_lines(bufnr, cursor_row, cursor_row, false, lines_to_insert)
+
+  vim.notify("Jira ticket content inserted.", vim.log.levels.INFO)
+end
+
+-- Function to fetch Confluence page content with comments
+function M.fetch_page_content(page_id)
+  if not page_id or page_id == "" then
+    vim.notify("Error: Page ID is required.", vim.log.levels.ERROR)
+    return
+  end
+
+  local api_token = os.getenv("ATLASSIAN_API_TOKEN")
+  if not api_token or api_token == "" then
+    vim.notify("Error: ATLASSIAN_API_TOKEN environment variable is not set.", vim.log.levels.ERROR)
+    return
+  end
+
+  -- Check dependencies
+  if vim.fn.executable("curl") == 0 then
+    vim.notify("Error: 'curl' command not found in PATH.", vim.log.levels.ERROR)
+    return
+  end
+  if vim.fn.executable("jq") == 0 then
+    vim.notify("Error: 'jq' command not found in PATH.", vim.log.levels.ERROR)
+    return
+  end
+  if vim.fn.executable("html2markdown") == 0 then
+    vim.notify("Error: 'html2markdown' command not found in PATH.", vim.log.levels.ERROR)
+    return
+  end
+
+  local email = os.getenv("ATLASSIAN_EMAIL")
+  if not email or email == "" then
+    vim.notify("Error: ATLASSIAN_EMAIL environment variable is not set.", vim.log.levels.ERROR)
+    return
+  end
+
+  local cloud_id = os.getenv("ATLASSIAN_CLOUD_ID")
+  if not cloud_id or cloud_id == "" then
+    vim.notify("Error: ATLASSIAN_CLOUD_ID environment variable is not set.", vim.log.levels.ERROR)
+    return
+  end
+
+  local page_ari = string.format("ari:cloud:confluence:%s:page/%s", cloud_id, page_id)
+
+  -- GraphQL query
+  local graphql_query = [[
+query getPageWithComments($id: ID!) {
+  confluence {
+    page(id: $id) {
+      title
+      body {
+        editor {
+          value
+        }
+      }
+      comments {
+        __typename
+        author {
+          user {
+            name
+          }
+        }
+        body {
+          editor {
+            value
+          }
+        }
+        commentId
+      }
+    }
+  }
+}]]
+
+  -- Prepare GraphQL request
+  local graphql_payload = vim.json.encode({
+    query = graphql_query,
+    variables = { id = page_ari }
+  })
+
+  -- Create temporary file for GraphQL payload
+  local temp_file = vim.fn.tempname()
+  local file = io.open(temp_file, "w")
+  if not file then
+    vim.notify("Error: Could not create temporary file for GraphQL request.", vim.log.levels.ERROR)
+    return
+  end
+  file:write(graphql_payload)
+  file:close()
+
+  -- Execute GraphQL query
+  local graphql_command = string.format(
+    "curl --fail --silent --show-error --request POST " ..
+    "--url 'https://wonder.atlassian.net/gateway/api/graphql' " ..
+    "--user '%s:%s' " ..
+    "--header 'Accept: application/json' " ..
+    "--header 'Content-Type: application/json' " ..
+    "--header 'X-ExperimentalApi: confluence-agg-beta' " ..
+    "--data @%s",
+    email,
+    api_token,
+    temp_file
+  )
+
+  vim.notify("Fetching Confluence page data for " .. page_id .. "...", vim.log.levels.INFO)
+
+  local graphql_output = vim.fn.system(graphql_command)
+  
+  -- Clean up temporary file
+  os.remove(temp_file)
+
+  -- Check for shell errors
+  if vim.v.shell_error ~= 0 then
+    vim.notify(
+      "Error fetching page data from Confluence GraphQL API. Shell error: " .. vim.v.shell_error ..
+      ". Output: " .. graphql_output,
+      vim.log.levels.ERROR
+    )
+    return
+  end
+
+  if graphql_output == "" or graphql_output == nil then
+    vim.notify("Error: No data received from Confluence GraphQL API.", vim.log.levels.ERROR)
+    return
+  end
+
+  -- Parse the GraphQL response
+  local ok, response = pcall(vim.json.decode, graphql_output)
+  if not ok or type(response) ~= "table" then
+    vim.notify("Error: Failed to parse GraphQL response: " .. (response or "Invalid JSON"), vim.log.levels.ERROR)
+    return
+  end
+
+  if response.errors then
+    vim.notify("GraphQL errors: " .. vim.json.encode(response.errors), vim.log.levels.ERROR)
+    return
+  end
+
+  local page_data = response.data and response.data.confluence and response.data.confluence.page
+  if not page_data then
+    vim.notify("Error: No page data found in GraphQL response.", vim.log.levels.ERROR)
+    return
+  end
+
+  local title = page_data.title or "Title not found"
+  local html_body = page_data.body and page_data.body.editor and page_data.body.editor.value or ""
+  local comments = page_data.comments or {}
+
+  -- Convert HTML body to Markdown
+  local markdown_body = html_to_markdown(html_body)
+  if markdown_body == "Error converting content to Markdown." then
+    markdown_body = "Error converting page body to Markdown."
   end
 
   -- Prepare lines to insert
@@ -109,38 +442,89 @@ function M.fetch_page_content(page_id)
   table.insert(lines_to_insert, "") -- Blank line
 
   -- Split markdown_body into lines and add them
-  -- vim.split with plain=true is important if markdown_body could contain regex special chars
   for _, line in ipairs(vim.split(markdown_body, "\n", {plain = true})) do
     table.insert(lines_to_insert, line)
   end
-  -- If markdown_body was empty, vim.split("", "\n") yields {""}, so one empty line is added.
-  -- If markdown_body was "" and you want no lines for body, adjust logic here.
-  -- Current behavior: title, blank, blank (if body was empty).
 
-  -- Get current buffer and cursor position (0-indexed for API)
+  -- Process comments if any exist
+  if #comments > 0 then
+    vim.notify("Processing " .. #comments .. " comments...", vim.log.levels.INFO)
+    
+    -- Build comment hierarchy
+    local comment_hierarchy = build_comment_hierarchy(comments, email, api_token)
+    
+    -- Separate inline and footer comments
+    local inline_comments = {}
+    local footer_comments = {}
+    
+    for _, comment in ipairs(comment_hierarchy) do
+      if comment.type == "ConfluenceInlineComment" then
+        table.insert(inline_comments, comment)
+      elseif comment.type == "ConfluenceFooterComment" then
+        table.insert(footer_comments, comment)
+      end
+    end
+    
+    table.insert(lines_to_insert, "")
+
+    -- Add inline comments section
+    if #inline_comments > 0 then
+      table.insert(lines_to_insert, "<inline-comments>")
+      local inline_comment_lines = format_confluence_comments(inline_comments, 1)
+      for _, line in ipairs(inline_comment_lines) do
+        table.insert(lines_to_insert, line)
+      end
+      table.insert(lines_to_insert, "</inline-comments>")
+      table.insert(lines_to_insert, "")
+    end
+
+    -- Add footer comments section
+    if #footer_comments > 0 then
+      table.insert(lines_to_insert, "<footer-comments>")
+      local footer_comment_lines = format_confluence_comments(footer_comments, 1)
+      for _, line in ipairs(footer_comment_lines) do
+        table.insert(lines_to_insert, line)
+      end
+      table.insert(lines_to_insert, "</footer-comments>")
+    end
+  end
+
+  -- Get current buffer and cursor position
   local bufnr = vim.api.nvim_get_current_buf()
-  local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1 -- API uses 0-indexed lines
+  local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1
 
-  -- Insert lines at the current cursor position, pushing existing content down
+  -- Insert lines at the current cursor position
   vim.api.nvim_buf_set_lines(bufnr, cursor_row, cursor_row, false, lines_to_insert)
 
-  vim.notify("Confluence page content (title and body) inserted.", vim.log.levels.INFO)
+  vim.notify("Confluence page content with comments inserted.", vim.log.levels.INFO)
 end
 
--- Create a user command :FetchConfluencePage
+-- Create user commands
 vim.api.nvim_create_user_command(
   "FetchConfluencePage",
   function(opts)
-    -- opts.args will contain the string of arguments passed to the command
     M.fetch_page_content(opts.args)
   end,
   {
-    nargs = 1, -- Expects one argument (the page ID)
+    nargs = 1,
     complete = function(arglead, cmdline, cursorpos)
-      -- Basic completion, could be enhanced if you have a list of page IDs
       return {}
     end,
     desc = "Fetch Confluence page by ID and insert its title and content.",
+  }
+)
+
+vim.api.nvim_create_user_command(
+  "FetchJiraTicket",
+  function(opts)
+    M.fetch_jira_ticket(opts.args)
+  end,
+  {
+    nargs = 1,
+    complete = function(arglead, cmdline, cursorpos)
+      return {}
+    end,
+    desc = "Fetch Jira ticket by key and insert its details and comments.",
   }
 )
 
