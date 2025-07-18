@@ -75,12 +75,12 @@ local function get_comment_parent(comment_id, comment_type, email, api_token)
     email,
     api_token
   )
-  
+
   local output = vim.fn.system(command)
   if vim.v.shell_error ~= 0 then
     return nil
   end
-  
+
   local parent_id = vim.trim(output)
   return parent_id ~= "null" and parent_id or nil
 end
@@ -89,7 +89,7 @@ end
 local function build_comment_hierarchy(comments, email, api_token)
   local comment_map = {}
   local roots = {}
-  
+
   -- First pass: create comment map and get parent info
   for _, comment in ipairs(comments) do
     comment_map[comment.commentId] = {
@@ -100,19 +100,19 @@ local function build_comment_hierarchy(comments, email, api_token)
       children = {}
     }
   end
-  
+
   -- Second pass: build hierarchy
   for _, comment in ipairs(comments) do
     local parent_id = get_comment_parent(comment.commentId, comment.__typename, email, api_token)
     local comment_data = comment_map[comment.commentId]
-    
+
     if parent_id and comment_map[parent_id] then
       table.insert(comment_map[parent_id].children, comment_data)
     else
       table.insert(roots, comment_data)
     end
   end
-  
+
   return roots
 end
 
@@ -334,7 +334,7 @@ query getPageWithComments($id: ID!) {
     page(id: $id) {
       title
       body {
-        editor {
+        anonymousExportView {
           value
         }
       }
@@ -389,7 +389,7 @@ query getPageWithComments($id: ID!) {
   vim.notify("Fetching Confluence page data for " .. page_id .. "...", vim.log.levels.INFO)
 
   local graphql_output = vim.fn.system(graphql_command)
-  
+
   -- Clean up temporary file
   os.remove(temp_file)
 
@@ -427,7 +427,7 @@ query getPageWithComments($id: ID!) {
   end
 
   local title = page_data.title or "Title not found"
-  local html_body = page_data.body and page_data.body.editor and page_data.body.editor.value or ""
+  local html_body = page_data.body and page_data.body.anonymousExportView and page_data.body.anonymousExportView.value or ""
   local comments = page_data.comments or {}
 
   -- Convert HTML body to Markdown
@@ -449,14 +449,14 @@ query getPageWithComments($id: ID!) {
   -- Process comments if any exist
   if #comments > 0 then
     vim.notify("Processing " .. #comments .. " comments...", vim.log.levels.INFO)
-    
+
     -- Build comment hierarchy
     local comment_hierarchy = build_comment_hierarchy(comments, email, api_token)
-    
+
     -- Separate inline and footer comments
     local inline_comments = {}
     local footer_comments = {}
-    
+
     for _, comment in ipairs(comment_hierarchy) do
       if comment.type == "ConfluenceInlineComment" then
         table.insert(inline_comments, comment)
@@ -464,7 +464,7 @@ query getPageWithComments($id: ID!) {
         table.insert(footer_comments, comment)
       end
     end
-    
+
     table.insert(lines_to_insert, "")
 
     -- Add inline comments section
