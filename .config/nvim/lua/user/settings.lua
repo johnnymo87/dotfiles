@@ -1,3 +1,6 @@
+-- Make `,` my leader key.
+vim.g.mapleader = ','
+
 -- Display tabs and trailing spaces visually.
 vim.opt.list = true
 vim.opt.listchars = "tab:▷▷⋮,trail:·"
