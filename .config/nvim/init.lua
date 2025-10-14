@@ -12,3 +12,11 @@ require("user.cursor_highlight")
 require("user.telescope")
 -- require("user.vim-obsession")
 -- require("user.tree-sitter")
+
+-- Autocommand for custom filetypes
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  pattern = "*.aichat",
+  callback = function()
+    vim.bo.filetype = "aichat"
+  end,
+})
