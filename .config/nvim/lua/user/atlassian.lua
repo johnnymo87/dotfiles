@@ -286,6 +286,78 @@ function M.fetch_jira_ticket(ticket_key)
   vim.notify("Jira ticket content inserted.", vim.log.levels.INFO)
 end
 
+-- Helper function to download attachments for a page
+local function download_attachments(page_id, email, api_token)
+  -- Create attachments directory
+  local attachments_dir = string.format("./confluence-attachments/%s", page_id)
+  local mkdir_cmd = string.format("mkdir -p %s", vim.fn.shellescape(attachments_dir))
+  vim.fn.system(mkdir_cmd)
+
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Warning: Could not create attachments directory", vim.log.levels.WARN)
+    return 0
+  end
+
+  -- List attachments
+  local list_cmd = string.format(
+    "curl --silent --show-error " ..
+    "--url 'https://wonder.atlassian.net/wiki/rest/api/content/%s/child/attachment' " ..
+    "--user '%s:%s' " ..
+    "--header 'Accept: application/json'",
+    page_id,
+    email,
+    api_token
+  )
+
+  local attachments_json = vim.fn.system(list_cmd)
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Warning: Could not list attachments", vim.log.levels.WARN)
+    return 0
+  end
+
+  -- Parse attachments
+  local ok, attachments_data = pcall(vim.json.decode, attachments_json)
+  if not ok or type(attachments_data) ~= "table" or not attachments_data.results then
+    vim.notify("Warning: Could not parse attachments", vim.log.levels.WARN)
+    return 0
+  end
+
+  -- Download each PNG attachment
+  local download_count = 0
+  for _, attachment in ipairs(attachments_data.results) do
+    local media_type = attachment.extensions and attachment.extensions.mediaType
+    if media_type == "image/png" then
+      local attachment_id = attachment.id:gsub("^att", "")
+      local filename = attachment.title
+      local output_path = string.format("%s/%s", attachments_dir, filename)
+
+      local download_cmd = string.format(
+        "curl -sS -L --fail " ..
+        "--url 'https://wonder.atlassian.net/wiki/rest/api/content/%s/child/attachment/%s/download' " ..
+        "--user '%s:%s' " ..
+        "--output %s",
+        page_id,
+        attachment_id,
+        email,
+        api_token,
+        vim.fn.shellescape(output_path)
+      )
+
+      vim.fn.system(download_cmd)
+      if vim.v.shell_error == 0 then
+        download_count = download_count + 1
+      else
+        vim.notify(
+          string.format("Warning: Failed to download %s", filename),
+          vim.log.levels.WARN
+        )
+      end
+    end
+  end
+
+  return download_count
+end
+
 -- Function to fetch Confluence page content with comments
 function M.fetch_page_content(page_id)
   if not page_id or page_id == "" then
@@ -436,10 +508,21 @@ query getPageWithComments($id: ID!) {
     markdown_body = "Error converting page body to Markdown."
   end
 
+  -- Download attachments
+  vim.notify("Downloading attachments...", vim.log.levels.INFO)
+  local attachment_count = download_attachments(page_id, email, api_token)
+
   -- Prepare lines to insert
   local lines_to_insert = {}
   table.insert(lines_to_insert, title)
   table.insert(lines_to_insert, "") -- Blank line
+
+  -- Add attachment note if any were downloaded
+  if attachment_count > 0 then
+    local attachments_path = string.format("./confluence-attachments/%s/", page_id)
+    table.insert(lines_to_insert, string.format("> **Attachments downloaded to**: `%s`", attachments_path))
+    table.insert(lines_to_insert, "")
+  end
 
   -- Split markdown_body into lines and add them
   for _, line in ipairs(vim.split(markdown_body, "\n", {plain = true})) do
@@ -496,7 +579,14 @@ query getPageWithComments($id: ID!) {
   -- Insert lines at the current cursor position
   vim.api.nvim_buf_set_lines(bufnr, cursor_row, cursor_row, false, lines_to_insert)
 
-  vim.notify("Confluence page content with comments inserted.", vim.log.levels.INFO)
+  if attachment_count > 0 then
+    vim.notify(
+      string.format("Confluence page content inserted with %d attachment(s) downloaded.", attachment_count),
+      vim.log.levels.INFO
+    )
+  else
+    vim.notify("Confluence page content inserted.", vim.log.levels.INFO)
+  end
 end
 
 -- Create user commands
