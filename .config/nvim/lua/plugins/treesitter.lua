@@ -9,7 +9,10 @@ return {
   "nvim-treesitter/nvim-treesitter",
   build = ":TSUpdate", -- Run :TSUpdate after installing
   event = { "BufReadPost", "BufNewFile" }, -- Lazy-load on buffer read/new file
-  --init = function()
-  --  require("user.treesitter") -- My treesitter configuration
-  --end,
+  config = function()
+    require("nvim-treesitter.configs").setup({
+      highlight = { enable = true },
+      indent = { enable = true },
+    })
+  end,
 }
