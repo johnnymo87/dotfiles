@@ -19,6 +19,7 @@ Use the OS's recommended package manager to install or update everything mention
 1. Symlink the necessary files to `~`.
    ```
    for x in .bash_profile .bashrc .bashrc.d .config/nvim .gitconfig .gitignore_global .tmux.conf .tmux; do ln -sf $(pwd)/$x ~/$x; done
+   ln -sf $(pwd)/.claude/statusline.sh ~/.claude/statusline.sh
    ```
 
 1. Install tmux.
@@ -84,3 +85,25 @@ I use [`tpm`](https://github.com/tmux-plugins/tpm) for tmux plugins. So to add a
 
 ### For bash
 New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be executable, so do `chmod +x .bashrc.d/*.bashrc` after adding a new one.
+
+### For Claude Code
+1. Install Claude Code:
+   ```
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+2. Authenticate with Claude Code (restart your shell first to pick up the PATH from `.bashrc.d/claude.bashrc`):
+   ```
+   claude
+   ```
+   Then type `/login` and follow the prompts.
+
+3. Configure the status line. After symlinking `statusline.sh` from step 6 of Installation, update `~/.claude/settings.json` to include:
+   ```json
+   {
+     "statusLine": {
+       "type": "command",
+       "command": "~/.claude/statusline.sh"
+     }
+   }
+   ```
