@@ -20,6 +20,7 @@ Use the OS's recommended package manager to install or update everything mention
    ```
    for x in .bash_profile .bashrc .bashrc.d .config/nvim .gitconfig .gitignore_global .tmux.conf .tmux; do ln -sf $(pwd)/$x ~/$x; done
    ln -sf $(pwd)/.claude/statusline.sh ~/.claude/statusline.sh
+   ln -sf $(pwd)/.claude/hooks ~/.claude/hooks
    ```
 
 1. Install tmux.
