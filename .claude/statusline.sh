@@ -6,7 +6,20 @@ input=$(cat)
 # Extract basic information
 model=$(echo "$input" | jq -r '.model.display_name')
 current_dir=$(echo "$input" | jq -r '.workspace.current_dir')
-transcript_path=$(echo "$input" | jq -r '.transcript_path')
+
+# WORKAROUND: After /compact, Claude Code may pass stale transcript_path
+# Use PPID-based mailbox from SessionStart hook as authoritative source
+stdin_path=$(echo "$input" | jq -r '.transcript_path')
+ppid="${PPID:-unknown}"
+mailbox="${HOME}/.claude/runtime/${ppid}/transcript_path"
+
+transcript_path="$stdin_path"
+if [[ -f "$mailbox" ]]; then
+  new_path="$(<"$mailbox")"
+  if [[ -n "$new_path" && -f "$new_path" ]]; then
+    transcript_path="$new_path"
+  fi
+fi
 
 # Display directory with ~ for home
 display_dir="${current_dir/#$HOME/~}"
@@ -20,15 +33,17 @@ CONTEXT_LIMIT=156000
 # Parse transcript file for latest token usage
 context_tokens=0
 if [ -f "$transcript_path" ]; then
-    # Read transcript line by line from bottom up, find first assistant message with usage
-    context_tokens=$(tac "$transcript_path" | while IFS= read -r line; do
-        if echo "$line" | jq -e 'select(.type == "assistant" and .message.usage) | .message.usage | .input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens + .output_tokens' 2>/dev/null; then
-            break
-        fi
-    done | head -1)
+    # Get the most recent usage data (tac reads file backwards)
+    last_usage=$(tac "$transcript_path" | grep -m 1 '"type":"assistant"' | jq '.message.usage // empty' 2>/dev/null)
 
-    # Default to 0 if parsing failed
-    context_tokens=${context_tokens:-0}
+    if [ -n "$last_usage" ]; then
+        input_tokens=$(echo "$last_usage" | jq -r '.input_tokens // 0')
+        cache_creation=$(echo "$last_usage" | jq -r '.cache_creation_input_tokens // 0')
+        cache_read=$(echo "$last_usage" | jq -r '.cache_read_input_tokens // 0')
+        output_tokens=$(echo "$last_usage" | jq -r '.output_tokens // 0')
+
+        context_tokens=$((input_tokens + cache_creation + cache_read + output_tokens))
+    fi
 fi
 
 # Calculate percentage and create progress bar
