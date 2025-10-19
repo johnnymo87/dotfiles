@@ -5,3 +5,6 @@
 
 # Ignore the bashrc files with private info
 /.bashrc.d/*.private.bashrc
+
+# Ignore company-specific Claude skills
+/.claude/skills.private

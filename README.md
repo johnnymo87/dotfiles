@@ -21,6 +21,15 @@ Use the OS's recommended package manager to install or update everything mention
    for x in .bash_profile .bashrc .bashrc.d .config/nvim .gitconfig .gitignore_global .tmux.conf .tmux; do ln -sf $(pwd)/$x ~/$x; done
    ln -sf $(pwd)/.claude/statusline.sh ~/.claude/statusline.sh
    ln -sf $(pwd)/.claude/hooks ~/.claude/hooks
+
+   # Symlink Claude Code skills (both personal and company skills into ~/.claude/skills/)
+   mkdir -p ~/.claude/skills
+   for skill in $(pwd)/.claude/skills/*/; do
+     [ -d "$skill" ] && ln -sf "$skill" ~/.claude/skills/$(basename "$skill")
+   done
+   for skill in $(pwd)/.claude/skills.private/*/; do
+     [ -d "$skill" ] && ln -sf "$skill" ~/.claude/skills/$(basename "$skill")
+   done
    ```
 
 1. Install tmux.
@@ -108,3 +117,30 @@ New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be exe
      }
    }
    ```
+
+4. **Claude Code Skills**: Skills are packaged instructions that extend Claude's capabilities. This repository manages two types:
+
+   **Directory Structure**:
+   ```
+   dotfiles/.claude/
+   ├── skills/              (version controlled personal skills)
+   └── skills.private/      (NOT version controlled company skills)
+
+   ~/.claude/
+   └── skills/              (contains symlinks to individual skills from both sources)
+   ```
+
+   - **Personal Skills** (source: `dotfiles/.claude/skills/`):
+     - Portable skills that work across any company or project
+     - Version controlled in this repository
+     - Symlinked to `~/.claude/skills/`
+     - Examples: Generic coding patterns, tool workflows (git, docker), debugging techniques
+
+   - **Company Skills** (source: `dotfiles/.claude/skills.private/`):
+     - Company-specific workflows and infrastructure
+     - Managed in dotfiles repo but NOT version controlled (excluded via `.gitignore`)
+     - Symlinked to `~/.claude/skills/` alongside personal skills
+     - Examples: Internal tool access, company infrastructure patterns
+     - Backup via work-provided cloud storage (e.g., Google Drive) before migrating to new machine
+
+   For detailed guidance on creating and organizing skills, see the "Creating Claude Code Skills" skill in `.claude/skills/creating-claude-code-skills/`.
