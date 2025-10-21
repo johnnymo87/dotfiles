@@ -8,3 +8,14 @@
 
 # Ignore company-specific Claude skills
 /.claude/skills.private
+
+# Beads issue tracker
+# Ignore SQLite database files (local cache)
+/.beads/*.db
+/.beads/*.db-*
+/.beads/*.db-shm
+/.beads/*.db-wal
+
+# JSONL files: Ignore by default (only track in solo projects)
+# Use `git add -f .beads/*.jsonl` to force-add in solo repos
+/.beads/*.jsonl
