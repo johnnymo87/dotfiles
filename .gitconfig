@@ -35,11 +35,14 @@
   # http://gitfu.wordpress.com/2008/04/20/git-rerere-rereremember-what-you-did-last-time/
   enabled = true
 [user]
-  email = johnnymo87@gmail.com
+  email = jonathan.mohrbacher@gmail.com
   name = Jonathan Mohrbacher
+	signingkey = 0C0EF2DF7ADD5DD9
 [pull]
 	rebase = true
 [credential]
 	helper = store
 [init]
 	defaultBranch = main
+[commit]
+	gpgsign = true

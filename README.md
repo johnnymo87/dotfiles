@@ -12,6 +12,8 @@ Use the OS's recommended package manager to install or update everything mention
 
 1. Install git if it doesn't already exist.
 
+1. [Set up GPG commit signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits) and [tell git about your signing key](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key) (`.gitconfig` has `commit.gpgsign = true`).
+
 1. [Generate a new SSH key for GitHub](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) and then [add it to GitHub](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
 1. Because this repository uses git submodules, clone it recusively: `git clone --recurse-submodules git@github.com:johnnymo87/dotfiles.git`. Then `cd dotfiles`.
