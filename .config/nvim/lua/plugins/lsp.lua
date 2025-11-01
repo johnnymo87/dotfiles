@@ -73,10 +73,13 @@ return {
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       -- Configure each language server manually
+      -- ALL SERVERS DEFAULT TO OFF (autostart = false)
+      -- Use :LspStart <server> or <leader>ls to start on-demand
       local lspconfig = require("lspconfig")
 
       -- Lua (with vim globals for nvim config)
       lspconfig.lua_ls.setup({
+        autostart = false,
         on_attach = on_attach,
         capabilities = capabilities,
         settings = {
@@ -87,29 +90,29 @@ return {
       })
 
       -- Python
-      lspconfig.pyright.setup({ on_attach = on_attach, capabilities = capabilities })
-      lspconfig.ruff.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.pyright.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      lspconfig.ruff.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Ruby (Shopify ruby-lsp with Rails support)
-      lspconfig.ruby_lsp.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.ruby_lsp.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- TypeScript/JavaScript (vtsls for VS Code parity)
-      lspconfig.vtsls.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.vtsls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Rust
-      lspconfig.rust_analyzer.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.rust_analyzer.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Elixir
-      lspconfig.elixirls.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.elixirls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Java
-      lspconfig.jdtls.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.jdtls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- YAML (Kubernetes, CI/CD configs)
-      lspconfig.yamlls.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.yamlls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Bash/Shell
-      lspconfig.bashls.setup({ on_attach = on_attach, capabilities = capabilities })
+      lspconfig.bashls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
     end,
   },
 
