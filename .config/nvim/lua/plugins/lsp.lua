@@ -72,13 +72,12 @@ return {
       -- Get default capabilities with completion support
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-      -- Configure each language server manually
+      -- Configure each language server using new vim.lsp.config API (Neovim 0.11+)
       -- ALL SERVERS DEFAULT TO OFF (autostart = false)
-      -- Use :LspStart <server> or <leader>ls to start on-demand
-      local lspconfig = require("lspconfig")
+      -- Use :LspStart <server> to start on-demand
 
       -- Lua (with vim globals for nvim config)
-      lspconfig.lua_ls.setup({
+      vim.lsp.config('lua_ls', {
         autostart = false,
         on_attach = on_attach,
         capabilities = capabilities,
@@ -90,29 +89,29 @@ return {
       })
 
       -- Python
-      lspconfig.pyright.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
-      lspconfig.ruff.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('pyright', { autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('ruff', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Ruby (Shopify ruby-lsp with Rails support)
-      lspconfig.ruby_lsp.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('ruby_lsp', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- TypeScript/JavaScript (vtsls for VS Code parity)
-      lspconfig.vtsls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('vtsls', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Rust
-      lspconfig.rust_analyzer.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('rust_analyzer', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Elixir
-      lspconfig.elixirls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('elixirls', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Java
-      lspconfig.jdtls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('jdtls', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- YAML (Kubernetes, CI/CD configs)
-      lspconfig.yamlls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('yamlls', { autostart = false, on_attach = on_attach, capabilities = capabilities })
 
       -- Bash/Shell
-      lspconfig.bashls.setup({ autostart = false, on_attach = on_attach, capabilities = capabilities })
+      vim.lsp.config('bashls', { autostart = false, on_attach = on_attach, capabilities = capabilities })
     end,
   },
 
