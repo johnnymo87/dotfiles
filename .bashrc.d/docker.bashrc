@@ -7,6 +7,3 @@ function docker-rmi {
 function docker-rmv {
   docker volume rm $(docker volume ls  -q --filter dangling=true)
 }
-
-# Set DOCKER_HOST for Colima
-export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
