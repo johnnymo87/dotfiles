@@ -1,3 +1,6 @@
+# Increase per-process file descriptor limit to avoid pty exhaustion
+ulimit -n 2048
+
 # Use nvim as my default editor (in e.g. git commits, bundle open, etc).
 export EDITOR=nvim
 
