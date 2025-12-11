@@ -32,6 +32,12 @@ Use the OS's recommended package manager to install or update everything mention
    for skill in $(pwd)/.claude/skills.private/*/; do
      [ -d "$skill" ] && ln -sf "$skill" ~/.claude/skills/$(basename "$skill")
    done
+
+   # Symlink Claude Code custom slash commands
+   mkdir -p ~/.claude/commands
+   for cmd in $(pwd)/.claude/commands/*.md; do
+     [ -f "$cmd" ] && ln -sf "$cmd" ~/.claude/commands/$(basename "$cmd")
+   done
    ```
 
 1. Install tmux.
