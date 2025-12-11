@@ -6,8 +6,9 @@
 # Ignore the bashrc files with private info
 /.bashrc.d/*.private.bashrc
 
-# Ignore company-specific Claude skills
+# Ignore company-specific Claude skills and commands
 /.claude/skills.private
+/.claude/commands.private
 
 # Beads issue tracker
 # Ignore SQLite database files (local cache)

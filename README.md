@@ -33,9 +33,12 @@ Use the OS's recommended package manager to install or update everything mention
      [ -d "$skill" ] && ln -sf "$skill" ~/.claude/skills/$(basename "$skill")
    done
 
-   # Symlink Claude Code custom slash commands
+   # Symlink Claude Code custom slash commands (both personal and company commands)
    mkdir -p ~/.claude/commands
    for cmd in $(pwd)/.claude/commands/*.md; do
+     [ -f "$cmd" ] && ln -sf "$cmd" ~/.claude/commands/$(basename "$cmd")
+   done
+   for cmd in $(pwd)/.claude/commands.private/*.md; do
      [ -f "$cmd" ] && ln -sf "$cmd" ~/.claude/commands/$(basename "$cmd")
    done
    ```
@@ -152,3 +155,26 @@ New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be exe
      - Backup via work-provided cloud storage (e.g., Google Drive) before migrating to new machine
 
    For detailed guidance on creating and organizing skills, see the "Creating Claude Code Skills" skill in `.claude/skills/creating-claude-code-skills/`.
+
+5. **Claude Code Commands**: Custom slash commands invoked with `/command-name`. Same pattern as skills:
+
+   **Directory Structure**:
+   ```
+   dotfiles/.claude/
+   ├── commands/              (version controlled personal commands)
+   └── commands.private/      (NOT version controlled company commands)
+
+   ~/.claude/
+   └── commands/              (contains symlinks to commands from both sources)
+   ```
+
+   - **Personal Commands** (source: `dotfiles/.claude/commands/`):
+     - Portable commands that work across any company or project
+     - Version controlled in this repository
+     - Examples: `/so-question` for drafting Stack Overflow questions
+
+   - **Company Commands** (source: `dotfiles/.claude/commands.private/`):
+     - Company-specific workflows
+     - Managed in dotfiles repo but NOT version controlled (excluded via `.gitignore`)
+     - Examples: `/fr-incident-response` for Fresh Realm incident handling
+     - Backup via work-provided cloud storage before migrating to new machine
