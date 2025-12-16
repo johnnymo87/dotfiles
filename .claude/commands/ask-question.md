@@ -1,32 +1,46 @@
 ---
-description: Draft a Stack Overflow question about a technical problem encountered during development
+description: Draft a Stack Exchange question about a technical problem encountered during development
 allowed-tools: [Read, Glob, Grep, Bash]
 ---
 
-Help me draft a Stack Overflow question about a technical problem I've encountered.
+Help me draft a Stack Exchange question about a technical problem I've encountered.
 
 **Topic/error (optional):** $ARGUMENTS
 
 **Process:**
 
-1. **Understand the problem context**
+1. **Determine the appropriate Stack Exchange site**
+
+   Based on the nature of the problem, recommend one of:
+
+   | Site | Best For | Not For |
+   |------|----------|---------|
+   | **Stack Overflow** | Specific coding problems, debugging, "how do I do X in language Y" | Design opinions, code review |
+   | **Code Review** | Working code that could be improved (style, performance, idioms) | Broken code, hypotheticals |
+   | **Software Engineering** | Architecture, design patterns, methodology, trade-offs | Implementation details, debugging |
+   | **DevOps** | CI/CD, infrastructure, deployment, containers | Application code issues |
+   | **DBA** | Database design, query optimization, administration | ORM/application-level DB code |
+
+   State your recommendation and brief rationale before proceeding.
+
+2. **Understand the problem context**
    - If topic provided, research it in the current codebase
    - Look at recent errors, code changes, or discussions in our conversation
    - Identify the specific technical issue (error message, unexpected behavior, architectural question)
 
-2. **Gather environmental context**
+3. **Gather environmental context**
    - Check language/framework versions (package.json, build.gradle, pom.xml, MODULE.bazel, etc.)
    - Identify relevant dependencies and their versions
    - Note any monorepo or build system constraints
 
-3. **Create minimal reproduction**
+4. **Create minimal reproduction**
    - Extract the specific code that demonstrates the problem
    - Remove project-specific details that aren't relevant
    - Include configuration files if relevant (application.yml, etc.)
 
-4. **Write the question in a local markdown file**
+5. **Write the question in a local markdown file**
 
-   **File location:** Write to the `/tmp/` directory (yes, the global tmp directory). Use naming pattern `stackoverflow-{topic-slug}-question.md`.
+   **File location:** Write to the `/tmp/` directory (yes, the global tmp directory). Use naming pattern `stackexchange-{site}-{topic-slug}-question.md` (e.g., `stackexchange-codereview-caching-strategy-question.md`).
 
    **Structure the question with these sections:**
 
@@ -81,24 +95,25 @@ Help me draft a Stack Overflow question about a technical problem I've encounter
    [Brief explanation of why this matters - the business/project context that helps answerers understand the constraints and suggest appropriate solutions. Mention any hard constraints like "monorepo-wide version X" or "must use technology Y".]
    ```
 
-5. **Quality checklist before finishing**
+6. **Quality checklist before finishing**
    - [ ] Title is a specific question (not "Problem with X")
    - [ ] Code is minimal but complete (can be copy-pasted to reproduce)
    - [ ] Error message is exact (not paraphrased)
    - [ ] "What I've tried" shows due diligence
    - [ ] Questions are specific and answerable
    - [ ] No sensitive info (credentials, internal URLs, company names in paths)
-   - [ ] Tags are accurate (check they exist on SO)
+   - [ ] Tags are accurate (check they exist on the target site)
    - [ ] Broader context explains constraints without unnecessary detail
+   - [ ] Question fits the chosen site's scope (see step 1)
 
 **Writing style guidelines:**
 - Be concise but complete
-- Use "I" not "we" (SO convention)
+- Use "I" not "we" (Stack Exchange convention)
 - Show the problem, don't just describe it
 - Anticipate follow-up questions and address them preemptively
 - Include version numbers - they matter!
 - If asking about alternatives, explain what you've already considered and why each might not work
 
 **After writing:**
-- Tell the user where the file was saved
-- Note that after posting on SO and getting an answer, expect that they will save the answer to a `stackoverflow-{topic-slug}-answer.md`) companion file
+- Tell the user where the file was saved and which Stack Exchange site it targets
+- Note that after posting and getting an answer, expect that they will save the answer to a `stackexchange-{site}-{topic-slug}-answer.md` companion file
