@@ -12,6 +12,8 @@ The `gh` CLI doesn't have first-class support for inline/in-code pull request re
 
 - Access inline PR review comments
 - Get review thread status (resolved/unresolved)
+- Reply to inline review comments
+- Resolve and unresolve review threads
 - Use GitHub's REST API via gh api
 - Use GitHub's GraphQL API via gh api
 - Extract owner/repo/PR number from URLs
@@ -170,6 +172,93 @@ gh api graphql -f query='
 - You want to fetch everything in one query
 - REST doesn't expose the metadata you need
 - You're building complex queries across related data
+
+## Responding to Review Comments
+
+### Reply to an Inline Comment
+
+```bash
+# Get comment IDs first
+gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | "\(.id) \(.path):\(.line)"'
+
+# Reply to a specific comment
+gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies \
+  -X POST -f body="Done. Fixed in latest commit."
+```
+
+**Endpoint:** `POST /repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies`
+
+**Reference:** [Create a reply for a review comment](https://docs.github.com/en/rest/pulls/comments#create-a-reply-for-a-review-comment)
+
+### Resolve a Review Thread
+
+Review threads can only be resolved via GraphQL. First get the thread ID, then resolve it:
+
+```bash
+# Get thread IDs (note: these start with PRRT_)
+gh api graphql -f query='
+query {
+  repository(owner: "OWNER", name: "REPO") {
+    pullRequest(number: PR_NUMBER) {
+      reviewThreads(first: 10) {
+        nodes {
+          id
+          isResolved
+          comments(first: 1) {
+            nodes {
+              body
+              path
+            }
+          }
+        }
+      }
+    }
+  }
+}'
+
+# Resolve the thread
+gh api graphql -f query='
+mutation {
+  resolveReviewThread(input: {threadId: "PRRT_kwDOxxxxxx"}) {
+    thread {
+      isResolved
+    }
+  }
+}'
+```
+
+**Note:** The `threadId` is the GraphQL node ID (starts with `PRRT_`), not the REST API comment ID.
+
+### Unresolve a Review Thread
+
+```bash
+gh api graphql -f query='
+mutation {
+  unresolveReviewThread(input: {threadId: "PRRT_kwDOxxxxxx"}) {
+    thread {
+      isResolved
+    }
+  }
+}'
+```
+
+### Reply and Resolve in Sequence
+
+A common workflow is to reply to feedback explaining what you did, then resolve the thread:
+
+```bash
+# 1. Reply to the comment (REST)
+gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies \
+  -X POST -f body="Done. Created shared BigQuery bean."
+
+# 2. Resolve the thread (GraphQL)
+gh api graphql -f query='
+mutation {
+  resolveReviewThread(input: {threadId: "PRRT_kwDOxxxxxx"}) {
+    thread { isResolved }
+  }
+}'
+```
 
 ## Common Use Cases
 
@@ -464,8 +553,20 @@ gh api rate_limit
 # Get inline PR comments (REST)
 gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments
 
-# Get resolved status (GraphQL)
-gh api graphql -f query='...' -F owner=OWNER -F repo=REPO -F number=PR_NUMBER
+# Get comment IDs with file/line info
+gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments --jq '.[] | "\(.id) \(.path):\(.line)"'
+
+# Reply to a comment (REST)
+gh api repos/OWNER/REPO/pulls/PR_NUMBER/comments/COMMENT_ID/replies -X POST -f body="Done."
+
+# Get thread IDs and resolved status (GraphQL)
+gh api graphql -f query='query { repository(owner:"OWNER", name:"REPO") { pullRequest(number:PR_NUMBER) { reviewThreads(first:10) { nodes { id isResolved } } } } }'
+
+# Resolve a thread (GraphQL)
+gh api graphql -f query='mutation { resolveReviewThread(input:{threadId:"PRRT_xxx"}) { thread { isResolved } } }'
+
+# Unresolve a thread (GraphQL)
+gh api graphql -f query='mutation { unresolveReviewThread(input:{threadId:"PRRT_xxx"}) { thread { isResolved } } }'
 
 # Parse PR URL
 gh pr view URL --json number,repository
