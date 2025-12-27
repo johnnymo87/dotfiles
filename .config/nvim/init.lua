@@ -20,3 +20,6 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
     vim.bo.filetype = "aichat"
   end,
 })
+
+-- Claude Code Remote control via RPC
+require("ccremote").setup()
