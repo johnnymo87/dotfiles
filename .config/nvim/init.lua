@@ -12,3 +12,6 @@ require("user.cursor_highlight")
 require("user.telescope")
 -- require("user.vim-obsession")
 -- require("user.tree-sitter")
+
+-- Claude Code Remote control via RPC
+require("ccremote").setup()
