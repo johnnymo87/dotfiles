@@ -1,6 +1,6 @@
 ---
 name: bd-issue-tracking
-description: Track complex, multi-session work with dependency graphs using bd (beads) issue tracker. Use when work spans multiple sessions, has complex dependencies, or requires persistent context across compaction cycles. For simple single-session linear tasks, TodoWrite remains appropriate.
+description: Track complex, multi-session work with dependency graphs using bd (beads) issue tracker. Git-backed JSONL files are the source of truth, with SQLite as local cache. Use when work spans multiple sessions, has complex dependencies, or requires persistent context across compaction cycles. For simple single-session linear tasks, TodoWrite remains appropriate.
 ---
 
 # bd Issue Tracking
@@ -36,6 +36,81 @@ bd is a graph-based issue tracker for persistent memory across sessions. Use for
 
 **For complete compaction recovery workflow and note-taking patterns, read:** [references/WORKFLOWS.md](references/WORKFLOWS.md#compaction-survival)
 
+## Git Sync Architecture
+
+bd uses **JSONL as the source of truth**, with SQLite as a local cache:
+
+| File | Purpose | Committed to Git? |
+|------|---------|-------------------|
+| `.beads/beads.db` | SQLite cache (fast queries) | **No** (gitignored) |
+| `.beads/issues.jsonl` | Source of truth | **Yes** |
+| `.beads/metadata.json` | Repository metadata | **Yes** |
+
+**Auto-sync behavior:**
+- **Export**: After CRUD operations, bd exports to JSONL (5-second debounce)
+- **Import**: After `git pull`, first bd command auto-imports if JSONL is newer than DB
+
+### Daemon for Auto-Commit
+
+For hands-off JSONL commits, run the daemon:
+
+```bash
+bd daemon --start --auto-commit           # Auto-commit after changes
+bd daemon --start --auto-commit --auto-push  # Also push to remote
+bd daemon --status                        # Check daemon status
+bd daemon --stop                          # Stop daemon
+```
+
+**Recommendation**: Use `--auto-commit` for most workflows. Add `--auto-push` only if you want fully automated sync without review.
+
+### Protected Branch Workflow
+
+When `main` requires pull requests:
+
+```bash
+# Initialize with a sync branch (commits go here, not main)
+bd init --branch beads-sync
+
+# Start daemon (commits to beads-sync automatically)
+bd daemon --start --auto-commit
+
+# Check what's changed
+bd sync --status
+
+# Merge to main (creates PR or direct merge)
+bd sync --merge
+
+# Or merge with dry-run first
+bd sync --merge --dry-run
+```
+
+**Sync commands:**
+```bash
+bd sync --status      # Show diff between sync branch and main
+bd sync --merge       # Merge sync branch to main
+bd sync --no-push     # Pull changes from remote without pushing
+bd sync --flush-only  # Manual export + commit (no merge)
+```
+
+### Configuration
+
+```bash
+bd config set sync.branch beads-sync   # Set sync branch
+bd config get sync.branch              # Check current setting
+bd config set sync.branch ""           # Unset (commit to current branch)
+```
+
+### Initialization Options
+
+```bash
+bd init                    # Interactive setup
+bd init --quiet            # Non-interactive (for agents)
+bd init --branch beads-sync  # Use separate sync branch
+bd init --stealth          # Local-only, doesn't commit to repo
+```
+
+**Stealth mode**: Use `--stealth` for personal tracking on shared repos where you don't want to commit `.beads/` files.
+
 ## Session Start Protocol
 
 **bd is available when:**
@@ -60,6 +135,16 @@ bd ready --json
 ```
 
 This gives immediate shared context about available work without requiring user prompting.
+
+### Editor Integration
+
+For Claude Code, install hooks that auto-inject bd context:
+
+```bash
+bd setup claude    # Installs SessionStart/PreCompact hooks
+```
+
+This runs `bd prime` at session start, providing ~1-2k tokens of workflow context automatically.
 
 **Note**: bd auto-discovers the database:
 - Uses `.beads/*.db` in current project if exists
@@ -430,6 +515,20 @@ Use JSON output when you need to parse results programmatically or extract speci
 - bd auto-syncs JSONL after each operation (5s debounce)
 - bd auto-imports JSONL when newer than DB (after git pull)
 - Manual operations: `bd export`, `bd import`
+
+**If daemon won't start or sync isn't working:**
+```bash
+bd daemon --status              # Check if running
+tail -f ~/.beads/daemon.log     # View daemon logs
+bd daemon --stop && bd daemon --start  # Restart daemon
+```
+
+**If worktree is corrupted (protected branch mode):**
+```bash
+rm -rf .git/beads-worktrees/beads-sync  # Remove worktree
+git worktree prune                       # Clean stale entries
+bd daemon --stop && bd daemon --start    # Recreates worktree
+```
 
 ## Reference Files
 
