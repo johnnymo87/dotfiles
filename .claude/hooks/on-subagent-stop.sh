@@ -32,10 +32,12 @@ transcript_path=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/de
 # Extract Claude's last assistant message with text content from transcript JSONL
 last_message=""
 if [[ -n "$transcript_path" && -f "$transcript_path" ]]; then
-    # Use jq to find the last assistant message that has text content
-    # tac reverses the file, jq filters for assistant messages with text, head -c gets first chunk
+    # Find the last assistant message that has text content
+    # 1. tac reverses the file
+    # 2. jq -s slurps all lines into array, finds first (last in original) with text
+    # 3. Extract just the text content
     last_message=$(tac "$transcript_path" 2>/dev/null \
-        | jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="text") | .text' 2>/dev/null \
+        | jq -s '[.[] | select(.type=="assistant") | select(.message.content[]?.type=="text")] | .[0] | .message.content[] | select(.type=="text") | .text' -r 2>/dev/null \
         | head -c 4000 \
         || true)
 fi
