@@ -22,7 +22,9 @@ set -e
 PPID_DIR="$HOME/.claude/runtime/$PPID"
 SESSION_FILE="$PPID_DIR/session_id"
 
-if [[ ! -f "$SESSION_FILE" ]]; then
+if [[ -f "$SESSION_FILE" ]]; then
+    : # file exists, continue
+else
     echo "Error: Session ID file not found at $SESSION_FILE"
     echo "This may happen if the session just started. Try again in a moment."
     exit 1
