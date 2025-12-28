@@ -21,6 +21,7 @@ Use the OS's recommended package manager to install or update everything mention
 1. Symlink the necessary files to `~`.
    ```
    for x in .bash_profile .bashrc .bashrc.d .config/nvim .gitconfig .gitignore_global .tmux.conf .tmux; do ln -sf $(pwd)/$x ~/$x; done
+   ln -sf $(pwd)/.claude/settings.json ~/.claude/settings.json
    ln -sf $(pwd)/.claude/statusline.sh ~/.claude/statusline.sh
    ln -sf $(pwd)/.claude/hooks ~/.claude/hooks
 
@@ -119,15 +120,7 @@ New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be exe
    ```
    Then type `/login` and follow the prompts.
 
-3. Configure the status line. After symlinking `statusline.sh` from step 6 of Installation, update `~/.claude/settings.json` to include:
-   ```json
-   {
-     "statusLine": {
-       "type": "command",
-       "command": "~/.claude/statusline.sh"
-     }
-   }
-   ```
+3. The status line and hooks are pre-configured in `settings.json` (symlinked in step 6).
 
 4. **Claude Code Skills**: Skills are packaged instructions that extend Claude's capabilities. This repository manages two types:
 
@@ -178,3 +171,37 @@ New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be exe
      - Managed in dotfiles repo but NOT version controlled (excluded via `.gitignore`)
      - Examples: `/fr-incident-response` for Fresh Realm incident handling
      - Backup via work-provided cloud storage before migrating to new machine
+
+6. **Claude Code Hooks**: Shell scripts that run in response to Claude Code events. Configured in `settings.json` and symlinked from `dotfiles/.claude/hooks/`:
+
+   | Hook | File | Purpose |
+   |------|------|---------|
+   | SessionStart | `on-session-start.sh` | Tracks session ID, registers with notification daemon |
+   | Stop | `on-stop.sh` | Sends Telegram notification when task completes (if opted in) |
+   | SubagentStop | `on-subagent-stop.sh` | Sends notification when subagent completes (if opted in) |
+
+7. **Telegram Notifications** (Optional): Get notified on your phone when Claude Code completes tasks.
+
+   **Prerequisites**:
+   - [Claude-Code-Remote](https://github.com/johnnymo87/Claude-Code-Remote/tree/develop) daemon running locally
+   - Telegram bot configured in Claude-Code-Remote (`.env` file)
+   - ngrok or similar tunnel for webhook (if not on a public IP)
+
+   **How it works**:
+   1. Hooks in `settings.json` report session events to the local daemon (port 3001)
+   2. Sessions start with notifications disabled by default
+   3. Run `/notify-telegram <label>` in any Claude Code session to opt-in to notifications
+   4. When Claude stops (task complete or waiting for input), you get a Telegram message
+   5. Reply via Telegram to send commands back to Claude Code
+
+   **Usage**:
+   ```
+   # In Claude Code, opt into notifications for this session:
+   /notify-telegram backend-refactor
+
+   # Walk away from your computer...
+   # When Claude completes, you'll receive a Telegram message with inline buttons
+   # Or reply with: /cmd <TOKEN> your message here
+   ```
+
+   **Transport priority**: The system tries nvim RPC injection first (requires ccremote plugin), then falls back to tmux injection if available. For nvim injection to work, start neovim with the `nvims` alias and register the terminal with `:CCRegister <name>`.
