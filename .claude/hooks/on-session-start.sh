@@ -2,13 +2,29 @@
 set -euo pipefail
 input="$(cat)"
 ppid="${PPID:-unknown}"
-dir="${HOME}/.claude/runtime/${ppid}"
-mkdir -p "$dir"
 
+# Extract session info from hook input
 transcript_path="$(printf '%s' "$input" | jq -r '.transcript_path // empty')"
 session_id="$(printf '%s' "$input" | jq -r '.session_id // empty')"
 
-# Write both for debugging; statusline will read transcript_path
+# Primary storage: by session_id (robust, survives PID reuse)
+if [[ -n "$session_id" ]]; then
+    session_dir="${HOME}/.claude/runtime/sessions/${session_id}"
+    mkdir -p "$session_dir"
+    printf '%s\n' "$transcript_path" > "${session_dir}/transcript_path"
+    printf '%s\n' "$ppid" > "${session_dir}/ppid"
+fi
+
+# Secondary: ppid-map for slash commands that only know PPID
+# Maps PPID -> session_id for quick lookup
+if [[ -n "$session_id" && "$ppid" =~ ^[0-9]+$ ]]; then
+    mkdir -p "${HOME}/.claude/runtime/ppid-map"
+    printf '%s\n' "$session_id" > "${HOME}/.claude/runtime/ppid-map/${ppid}"
+fi
+
+# Legacy: keep PPID-based dir for backward compatibility
+dir="${HOME}/.claude/runtime/${ppid}"
+mkdir -p "$dir"
 printf '%s\n' "$transcript_path" > "${dir}/transcript_path"
 printf '%s\n' "$session_id"      > "${dir}/session_id"
 
@@ -38,7 +54,7 @@ if [[ -n "$session_id" ]]; then
         --arg tmux_session "$tmux_session" \
         '{session_id: $session_id, ppid: $ppid, pid: $pid, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session}')
 
-    curl -sS --connect-timeout 0.1 --max-time 0.2 \
+    curl -sS --connect-timeout 1 --max-time 2 \
         -X POST "http://127.0.0.1:3001/session-start" \
         -H "Content-Type: application/json" \
         -d "$json_payload" >/dev/null 2>&1 || true
