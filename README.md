@@ -201,7 +201,8 @@ New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be exe
 
    # Walk away from your computer...
    # When Claude completes, you'll receive a Telegram message with inline buttons
-   # Or reply with: /cmd <TOKEN> your message here
+   # Swipe-reply directly to the notification (no token needed!)
+   # Or use: /cmd <TOKEN> your message here (for old notifications)
    ```
 
    **Transport priority**: The system tries nvim RPC injection first (requires ccremote plugin), then falls back to tmux injection if available. For nvim injection to work, start neovim with the `nvims` alias and register the terminal with `:CCRegister <name>`.

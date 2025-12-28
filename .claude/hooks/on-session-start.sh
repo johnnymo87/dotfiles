@@ -29,9 +29,12 @@ printf '%s\n' "$transcript_path" > "${dir}/transcript_path"
 printf '%s\n' "$session_id"      > "${dir}/session_id"
 
 # Detect tmux session if running inside tmux
+# Capture full pane target (session:window.pane) for accurate injection
 tmux_session=""
+tmux_pane=""
 if [[ -n "${TMUX:-}" ]]; then
     tmux_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
+    tmux_pane="$(tmux display-message -p '#{session_name}:#{window_index}.#{pane_index}' 2>/dev/null || true)"
 fi
 
 # Notify daemon of session start (fire-and-forget)
@@ -52,7 +55,8 @@ if [[ -n "$session_id" ]]; then
         --arg cwd "$PWD" \
         --arg nvim_socket "${NVIM:-}" \
         --arg tmux_session "$tmux_session" \
-        '{session_id: $session_id, ppid: $ppid, pid: $pid, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session}')
+        --arg tmux_pane "$tmux_pane" \
+        '{session_id: $session_id, ppid: $ppid, pid: $pid, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane}')
 
     curl -sS --connect-timeout 1 --max-time 2 \
         -X POST "http://127.0.0.1:3001/session-start" \
