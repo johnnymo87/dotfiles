@@ -58,7 +58,8 @@ json_payload=$(jq -n \
     --arg message "$last_message" \
     '{session_id: $session_id, label: $label, event: $event, message: $message}')
 
-curl -s -X POST "http://localhost:3001/stop" \
+curl -sS --connect-timeout 0.1 --max-time 0.2 \
+    -X POST "http://127.0.0.1:3001/stop" \
     -H "Content-Type: application/json" \
     -d "$json_payload" >/dev/null 2>&1 || true
 
