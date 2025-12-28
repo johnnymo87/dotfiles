@@ -31,19 +31,15 @@ label=$(cat "${dir}/notify_label")
 # Get transcript path from hook input
 transcript_path=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null || true)
 
-# Extract Claude's last assistant message from transcript JSONL
+# Extract Claude's last assistant message with text content from transcript JSONL
 last_message=""
 if [[ -n "$transcript_path" && -f "$transcript_path" ]]; then
-    # Get the last assistant message's text content
-    # Transcript is JSONL with .type="assistant" and .message.content[].text
-    last_message=$(tac "$transcript_path" 2>/dev/null | while read -r line; do
-        msg_type=$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)
-        if [[ "$msg_type" == "assistant" ]]; then
-            # Extract text from content array, join multiple text blocks
-            printf '%s' "$line" | jq -r '.message.content[]? | select(.type=="text") | .text' 2>/dev/null | head -c 4000
-            break
-        fi
-    done)
+    # Use jq to find the last assistant message that has text content
+    # tac reverses the file, jq filters for assistant messages with text, head -1 gets first match
+    last_message=$(tac "$transcript_path" 2>/dev/null \
+        | jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="text") | .text' 2>/dev/null \
+        | head -c 4000 \
+        || true)
 fi
 
 # Fallback if no message found
