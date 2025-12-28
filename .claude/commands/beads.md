@@ -1,5 +1,6 @@
 ---
 description: Activate beads-driven workflow for persistent task tracking across sessions
+argument-hint: [path/to/database.db]
 allowed-tools: [Bash, Read, Edit, Write, Glob, Grep]
 ---
 
@@ -11,7 +12,7 @@ Activate beads (bd) issue tracking for this session.
 
 1. **Determine database:**
    - If path provided: Use `--db $ARGUMENTS` for all bd commands
-   - If no path: bd auto-discovers `.beads/*.db` in current project or `~/.beads/default.db`
+   - If no path: bd auto-discovers `.beads/*.db`. Do not use `~/.beads/default.db`
 
 2. **Check current state:**
    ```bash
