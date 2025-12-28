@@ -65,8 +65,10 @@ Get notified on your phone when Claude Code completes tasks or needs input.
 
 ```bash
 cd ~/Code/Claude-Code-Remote
-node start-telegram-webhook.js
+lsof -ti :3001 | xargs kill -9 2>/dev/null; sleep 2 && node start-telegram-webhook.js
 ```
+
+The `lsof` prefix kills any existing process on port 3001 before starting.
 
 **Expected output:**
 ```
@@ -85,8 +87,10 @@ Keep this running in a dedicated terminal or tmux pane.
 In a separate terminal:
 
 ```bash
-ngrok http 3001 --url=rehabilitative-joanie-undefeatedly.ngrok-free.dev
+pkill -f ngrok; sleep 2 && ngrok http 3001 --url=rehabilitative-joanie-undefeatedly.ngrok-free.dev
 ```
+
+The `pkill` prefix kills any existing ngrok process before starting.
 
 **Note:** Replace the URL with your own ngrok domain. If you don't have a reserved domain, ngrok will provide a random URL and you'll need to update the webhook configuration in Claude-Code-Remote.
 
