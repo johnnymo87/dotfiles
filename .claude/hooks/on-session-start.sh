@@ -38,7 +38,6 @@ if [[ -n "${TMUX:-}" ]]; then
 fi
 
 # Notify daemon of session start (fire-and-forget)
-# Session starts with notify=false; user opts in via /notify command
 # Don't fail if daemon isn't running - this is optional
 if [[ -n "$session_id" ]]; then
     # Use jq to safely build JSON (handles quotes, newlines, special chars)
@@ -46,6 +45,14 @@ if [[ -n "$session_id" ]]; then
     ppid_num=0
     if [[ "$ppid" =~ ^[0-9]+$ ]]; then
         ppid_num="$ppid"
+    fi
+
+    # Check if notify_label exists from previous opt-in (survives session restarts)
+    notify_label=""
+    notify_flag="false"
+    if [[ -f "${session_dir}/notify_label" ]]; then
+        notify_label=$(cat "${session_dir}/notify_label")
+        notify_flag="true"
     fi
 
     json_payload=$(jq -n \
@@ -56,7 +63,9 @@ if [[ -n "$session_id" ]]; then
         --arg nvim_socket "${NVIM:-}" \
         --arg tmux_session "$tmux_session" \
         --arg tmux_pane "$tmux_pane" \
-        '{session_id: $session_id, ppid: $ppid, pid: $pid, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane}')
+        --argjson notify "$notify_flag" \
+        --arg label "$notify_label" \
+        '{session_id: $session_id, ppid: $ppid, pid: $pid, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane, notify: $notify, label: $label}')
 
     curl -sS --connect-timeout 1 --max-time 2 \
         -X POST "http://127.0.0.1:3001/session-start" \
