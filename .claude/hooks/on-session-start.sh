@@ -22,6 +22,16 @@ if [[ -n "$session_id" && "$ppid" =~ ^[0-9]+$ ]]; then
     printf '%s\n' "$session_id" > "${HOME}/.claude/runtime/ppid-map/${ppid}"
 fi
 
+# Tertiary: pane-map for tmux environments (more reliable than PPID)
+# Maps TMUX_PANE (e.g., %4) -> session_id
+# TMUX_PANE is unique per pane within a tmux server
+if [[ -n "$session_id" && -n "${TMUX_PANE:-}" ]]; then
+    # Strip % prefix for filesystem safety
+    pane_key="${TMUX_PANE#%}"
+    mkdir -p "${HOME}/.claude/runtime/pane-map"
+    printf '%s\n' "$session_id" > "${HOME}/.claude/runtime/pane-map/${pane_key}"
+fi
+
 # Legacy: keep PPID-based dir for backward compatibility
 dir="${HOME}/.claude/runtime/${ppid}"
 mkdir -p "$dir"

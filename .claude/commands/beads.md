@@ -12,7 +12,7 @@ Activate beads (bd) issue tracking for this session.
 
 1. **Determine database:**
    - If path provided: Use `--db $ARGUMENTS` for all bd commands
-   - If no path: bd auto-discovers `.beads/*.db`. Do not use `~/.beads/default.db`
+   - If no path: bd auto-discovers `.beads/*.db` (i.e. in CWD). Do not use `~/.beads/default.db`
 
 2. **Check current state:**
    ```bash

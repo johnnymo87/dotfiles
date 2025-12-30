@@ -9,19 +9,19 @@ Enable Telegram notifications for this session so you'll be alerted when tasks c
 
 **Steps to register:**
 
-1. **Find the current session ID** using ppid-map:
+1. **Find the current session ID** (prefer pane-map in tmux, fall back to ppid-map):
    ```bash
-   # List ppid-map entries by modification time (newest first)
-   ls -lt ~/.claude/runtime/ppid-map/ | head -5
+   # In tmux: use TMUX_PANE (more reliable, unique per pane)
+   # Outside tmux: use PPID
+   if [[ -n "${TMUX_PANE:-}" ]]; then
+       pane_key="${TMUX_PANE#%}"
+       cat ~/.claude/runtime/pane-map/$pane_key
+   else
+       cat ~/.claude/runtime/ppid-map/$PPID
+   fi
    ```
 
-   Choose the most recent entry that was created when this session started.
-   Read it to get the session_id:
-   ```bash
-   cat ~/.claude/runtime/ppid-map/<PPID>
-   ```
-
-   **Verify** it's the right session by checking the transcript path exists:
+   This gives you the session_id. Verify it exists:
    ```bash
    cat ~/.claude/runtime/sessions/<SESSION_ID>/transcript_path
    ```

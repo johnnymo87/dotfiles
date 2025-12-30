@@ -126,13 +126,13 @@ The label (e.g., `myproject`) helps identify which session sent the notification
 
 When a Claude Code session starts, the `on-session-start.sh` hook:
 1. Creates session tracking files in `~/.claude/runtime/sessions/<session_id>/`
-2. Creates PPID mapping in `~/.claude/runtime/ppid-map/<ppid>`
+2. Creates pane-map entry (in tmux) or ppid-map entry for session lookup
 3. Notifies the daemon of the new session
 
 ### Opt-In via /notify-telegram
 
 Running `/notify-telegram <label>`:
-1. Looks up the current session ID via ppid-map
+1. Looks up the current session ID via pane-map (tmux) or ppid-map (fallback)
 2. Registers with the daemon for notifications
 3. Writes `notify_label` file for hooks to read
 
@@ -261,7 +261,10 @@ sqlite3 src/data/message-tokens.db "SELECT * FROM message_tokens ORDER BY create
 
 ```
 ~/.claude/runtime/
-├── ppid-map/                    # Maps PPID → session_id
+├── pane-map/                    # Maps TMUX_PANE → session_id (preferred in tmux)
+│   ├── 4                        # Pane %4 → session_id
+│   └── 7                        # Pane %7 → session_id
+├── ppid-map/                    # Maps PPID → session_id (fallback)
 │   ├── 12345                    # Contains session_id
 │   └── 67890
 └── sessions/
