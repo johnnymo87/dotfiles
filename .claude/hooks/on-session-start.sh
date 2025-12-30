@@ -23,9 +23,10 @@ if [[ -n "$session_id" && "$ppid" =~ ^[0-9]+$ ]]; then
 fi
 
 # Tertiary: pane-map for tmux environments (more reliable than PPID)
+# BUT: Skip if inside nvim terminal - multiple nvim terminals share TMUX_PANE
+# so we must use PPID for nvim terminals (each terminal buffer has unique PPID)
 # Key format: <socket_name>-<pane_num> to handle multiple tmux servers
-# e.g., "default-4" for socket /tmp/tmux-504/default, pane %4
-if [[ -n "$session_id" && -n "${TMUX:-}" && -n "${TMUX_PANE:-}" ]]; then
+if [[ -n "$session_id" && -n "${TMUX:-}" && -n "${TMUX_PANE:-}" && -z "${NVIM:-}" ]]; then
     socket_path="${TMUX%%,*}"
     socket_name=$(basename "$socket_path")
     pane_num="${TMUX_PANE#%}"
