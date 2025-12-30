@@ -60,6 +60,17 @@ if [[ -n "$session_id" ]]; then
         ppid_num="$ppid"
     fi
 
+    # Capture process start time as epoch (for liveness validation)
+    # This allows daemon to detect PID reuse by comparing start times
+    start_time=0
+    if [[ "$ppid" =~ ^[0-9]+$ ]]; then
+        lstart=$(ps -o lstart= -p "$ppid" 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        if [[ -n "$lstart" ]]; then
+            # macOS lstart format: "Tue 30 Dec 13:14:35 2025"
+            start_time=$(date -j -f "%a %d %b %H:%M:%S %Y" "$lstart" "+%s" 2>/dev/null || echo "0")
+        fi
+    fi
+
     # Check if notify_label exists from previous opt-in (survives session restarts)
     notify_label=""
     notify_flag="false"
@@ -72,13 +83,14 @@ if [[ -n "$session_id" ]]; then
         --arg session_id "$session_id" \
         --argjson ppid "$ppid_num" \
         --argjson pid "$$" \
+        --argjson start_time "$start_time" \
         --arg cwd "$PWD" \
         --arg nvim_socket "${NVIM:-}" \
         --arg tmux_session "$tmux_session" \
         --arg tmux_pane "$tmux_pane" \
         --argjson notify "$notify_flag" \
         --arg label "$notify_label" \
-        '{session_id: $session_id, ppid: $ppid, pid: $pid, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane, notify: $notify, label: $label}')
+        '{session_id: $session_id, ppid: $ppid, pid: $pid, start_time: $start_time, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane, notify: $notify, label: $label}')
 
     curl -sS --connect-timeout 1 --max-time 2 \
         -X POST "http://127.0.0.1:3001/session-start" \
