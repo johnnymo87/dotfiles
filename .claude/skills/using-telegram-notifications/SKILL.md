@@ -261,9 +261,9 @@ sqlite3 src/data/message-tokens.db "SELECT * FROM message_tokens ORDER BY create
 
 ```
 ~/.claude/runtime/
-├── pane-map/                    # Maps TMUX_PANE → session_id (preferred in tmux)
-│   ├── 4                        # Pane %4 → session_id
-│   └── 7                        # Pane %7 → session_id
+├── pane-map/                    # Maps <socket>-<pane> → session_id (preferred in tmux)
+│   ├── default-4                # tmux socket "default", pane %4 → session_id
+│   └── default-7                # tmux socket "default", pane %7 → session_id
 ├── ppid-map/                    # Maps PPID → session_id (fallback)
 │   ├── 12345                    # Contains session_id
 │   └── 67890

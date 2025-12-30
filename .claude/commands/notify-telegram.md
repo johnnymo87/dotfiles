@@ -11,10 +11,13 @@ Enable Telegram notifications for this session so you'll be alerted when tasks c
 
 1. **Find the current session ID** (prefer pane-map in tmux, fall back to ppid-map):
    ```bash
-   # In tmux: use TMUX_PANE (more reliable, unique per pane)
+   # In tmux: use socket_name-pane_num (handles multiple tmux servers)
    # Outside tmux: use PPID
-   if [[ -n "${TMUX_PANE:-}" ]]; then
-       pane_key="${TMUX_PANE#%}"
+   if [[ -n "${TMUX:-}" && -n "${TMUX_PANE:-}" ]]; then
+       socket_path="${TMUX%%,*}"
+       socket_name=$(basename "$socket_path")
+       pane_num="${TMUX_PANE#%}"
+       pane_key="${socket_name}-${pane_num}"
        cat ~/.claude/runtime/pane-map/$pane_key
    else
        cat ~/.claude/runtime/ppid-map/$PPID
