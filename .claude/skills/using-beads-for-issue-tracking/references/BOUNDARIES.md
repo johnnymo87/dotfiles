@@ -281,7 +281,7 @@ TodoWrite for this session:
 
 Corresponding bead notes:
 ```bash
-bd update issue-123 --notes "COMPLETED: Login endpoint with bcrypt password
+bd update bd-a1b2 --notes "COMPLETED: Login endpoint with bcrypt password
 hashing (12 rounds). KEY DECISION: Using JWT tokens (not sessions) for stateless
 auth - simplifies horizontal scaling. IN PROGRESS: Session middleware implementation.
 NEXT: Need user input on token expiry time (1hr vs 24hr trade-off)."

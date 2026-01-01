@@ -1,6 +1,8 @@
 # Workflows and Checklists
 
-Detailed step-by-step workflows for common bd usage patterns with checklists.
+Detailed step-by-step workflows for common bd usage patterns with checklists (v0.42+).
+
+**Note:** Issue IDs use hash format like `bd-a1b2`. Examples use simplified IDs for clarity.
 
 ## Contents
 
@@ -11,6 +13,7 @@ Detailed step-by-step workflows for common bd usage patterns with checklists.
 - [Epic Planning](#epic-planning) - Structuring complex work with dependencies
 - [Side Quest Handling](#side-quests) - Discovery during main task, assessing blocker vs deferrable, resuming
 - [Multi-Session Resume](#resume) - Returning after days/weeks away
+- [End of Session](#end-of-session) - Syncing before leaving
 - [Unblocking Work](#unblocking) - Handling blocked issues
 - [Integration with TodoWrite](#integration-with-todowrite) - Using both tools together
 - [Common Workflow Patterns](#common-workflow-patterns)
@@ -65,7 +68,7 @@ After Compaction:
 
 **Good note (enables recovery):**
 ```
-bd update issue-42 --notes "COMPLETED: User authentication - added JWT token
+bd update bd-a1b2 --notes "COMPLETED: User authentication - added JWT token
 generation with 1hr expiry, implemented refresh token endpoint using rotating
 tokens pattern. IN PROGRESS: Password reset flow. Email service integration
 working. NEXT: Need to add rate limiting to reset endpoint (currently unlimited
@@ -75,7 +78,7 @@ recommendations, tech lead concerned about response time but benchmarks show <10
 
 **Bad note (insufficient for recovery):**
 ```
-bd update issue-42 --notes "Working on auth feature. Made some progress.
+bd update bd-a1b2 --notes "Working on auth feature. Made some progress.
 More to do later."
 ```
 
@@ -85,7 +88,7 @@ The good note contains:
 - Next concrete step (not just "continue")
 - Key context (team concerns, technical decisions with rationale)
 
-**After compaction**: `bd show issue-42` reconstructs the full context needed to continue work.
+**After compaction**: `bd show bd-a1b2` reconstructs the full context needed to continue work.
 
 ---
 
@@ -138,6 +141,9 @@ Issue Lifecycle:
 - `in_progress` → `blocked` if blocker discovered
 - `blocked` → `in_progress` when unblocked
 - `in_progress` → `closed` when complete
+- `closed` → `open` via `bd reopen`
+- `open` → `deferred` via `bd defer` (for later)
+- `deferred` → `open` via `bd undefer`
 
 ---
 
@@ -222,7 +228,7 @@ Actions:
 ```
 Resume Workflow:
 - [ ] Run bd ready to see available work
-- [ ] Run bd stats for project overview
+- [ ] Run bd status for project overview
 - [ ] List recent closed issues for context
 - [ ] Show details on issue to work on
 - [ ] Review design notes and acceptance criteria
@@ -231,6 +237,29 @@ Resume Workflow:
 ```
 
 **Why this works**: bd preserves design decisions, acceptance criteria, and dependency context. No scrolling conversation history or reconstructing from markdown.
+
+---
+
+## End of Session {#end-of-session}
+
+**Before ending a work session:**
+
+```
+Session End Workflow:
+- [ ] Update in_progress issues with notes on current state
+- [ ] Ensure any discovered work is captured as new issues
+- [ ] Sync with git to persist changes
+```
+
+**Sync pattern:**
+```bash
+git pull --rebase
+bd sync
+git push
+git status   # Verify "up to date with origin/main"
+```
+
+**Why this matters**: The 30-second debounce means recent changes may not be exported yet. Running `bd sync` ensures everything is committed before you leave.
 
 ---
 
@@ -421,10 +450,9 @@ Research or investigation work:
 5. Continue with bd tracking
 
 **"I closed an issue but work isn't done"**
-1. Reopen with bd update status=open
+1. Reopen with `bd reopen <issue-id>`
 2. Or create new issue linking to closed one
 3. Note what's still needed
-4. Closed issues can't be reopened in some systems, so create new if needed
 
 **"Too many issues, can't find what matters"**
 1. Use bd list with filters (priority, issue_type)

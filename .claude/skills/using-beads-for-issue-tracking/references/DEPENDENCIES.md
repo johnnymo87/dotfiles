@@ -1,6 +1,6 @@
 # Dependency Types Guide
 
-Deep dive into bd's four dependency types: blocks, related, parent-child, and discovered-from.
+Deep dive into bd's core dependency types: blocks, related, parent-child, and discovered-from. These four types cover most workflows; advanced types are listed at the end.
 
 ## Contents
 
@@ -39,12 +39,13 @@ Deep dive into bd's four dependency types: blocks, related, parent-child, and di
   - Using blocks for preferences, using discovered-from for planning, not using dependencies, over-using blocks, wrong direction
 - [Advanced Patterns](#advanced-patterns)
   - Diamond dependencies, optional dependencies, discovery cascade, epic with phases
+- [Additional Dependency Types](#additional-dependency-types)
 - [Visualization](#visualization)
 - [Summary](#summary)
 
 ## Overview
 
-bd supports four dependency types that serve different purposes in organizing and tracking work:
+bd supports four core dependency types that cover most workflows:
 
 | Type | Purpose | Affects `bd ready`? | Common Use |
 |------|---------|---------------------|------------|
@@ -53,7 +54,9 @@ bd supports four dependency types that serve different purposes in organizing an
 | **parent-child** | Hierarchy | No - structural only | Epics and subtasks |
 | **discovered-from** | Provenance | No - tracks origin | Side quests, research findings |
 
-**Key insight**: Only `blocks` dependencies affect what work is ready. The other three provide structure and context.
+**Key insight**: Only `blocks` dependencies (and a few advanced types like `waits-for`) affect what work is ready. The others provide structure and context.
+
+**Note:** Issue IDs use hash format like `bd-a1b2`. Examples in this document use simplified IDs for clarity.
 
 ---
 
@@ -241,7 +244,7 @@ Effect: Both show in bd ready; choosing one doesn't block the other
 ### Creating related Dependencies
 
 ```bash
-bd dep add issue-1 issue-2 --type related
+bd dep add bd-a1 bd-b2 --type related
 ```
 
 **Direction doesn't matter** for `related` - it's a symmetric link.
@@ -691,9 +694,55 @@ Nested hierarchy with phase ordering.
 
 ---
 
+## Additional Dependency Types
+
+Beyond the four core types, bd v0.42+ supports additional dependency types for specialized workflows. These are less commonly used but available when needed.
+
+### Workflow-Blocking Types
+
+These affect `bd ready` like `blocks`:
+
+| Type | Purpose |
+|------|---------|
+| **waits-for** | Fanout gate - wait for dynamic children to complete |
+| **conditional-blocks** | Issue B runs only if issue A fails |
+| **parent-child** | Child issues can block parent epic completion |
+
+### Association Types
+
+Non-blocking links for organization:
+
+| Type | Purpose |
+|------|---------|
+| **duplicates** | Mark issue as duplicate of another |
+| **supersedes** | Version chains - new issue replaces old |
+| **replies-to** | Conversation threading |
+| **relates-to** | Bidirectional soft link (use `bd relate` shorthand) |
+
+### Entity Types (HOP Foundation)
+
+For tracking people and approvals:
+
+| Type | Purpose |
+|------|---------|
+| **authored-by** | Who created this work |
+| **assigned-to** | Who is working on it |
+| **approved-by** | Who validated/approved it |
+| **validates** | Approval/validation relationship |
+| **tracks** | Non-blocking cross-project reference |
+| **caused-by** | Triggered by another issue |
+| **until** | Active until target closes |
+
+**When to use advanced types:** Most workflows only need the four core types. Use advanced types when you have specific needs like:
+- Multi-agent coordination (waits-for, conditional-blocks)
+- Deduplication (duplicates, supersedes)
+- Audit trails (authored-by, approved-by, validates)
+
+---
+
 ## Visualization
 
-When you run `bd show issue-id` on an issue, you see:
+When you run `bd show bd-a1b2` on an issue, you see:
 
 ```
 Issue: feature-10
@@ -718,7 +767,7 @@ This shows the full dependency context for an issue.
 
 ## Summary
 
-**Four dependency types, four different purposes:**
+**Four core dependency types for most workflows:**
 
 1. **blocks**: Sequential work, prerequisites, hard blockers
    - Affects bd ready
@@ -736,7 +785,9 @@ This shows the full dependency context for an issue.
    - Context preservation
    - Use to track emergence
 
-**Key insight**: Only `blocks` affects what work is ready. The other three provide rich context without constraining execution.
+**Key insight**: Only `blocks` (and advanced types like `waits-for`) affects what work is ready. The others provide rich context without constraining execution.
+
+**Advanced types** (when needed): `waits-for`, `conditional-blocks`, `duplicates`, `supersedes`, `validates`, `tracks`, and entity types for agent workflows.
 
 Use dependencies to create a graph that:
 - Automatically maintains ready work

@@ -3,11 +3,17 @@ name: bd-issue-tracking
 description: Track complex, multi-session work with dependency graphs using bd (beads) issue tracker. Git-backed JSONL files are the source of truth, with SQLite as local cache. Use when work spans multiple sessions, has complex dependencies, or requires persistent context across compaction cycles. For simple single-session linear tasks, TodoWrite remains appropriate.
 ---
 
-# bd Issue Tracking
+# bd Issue Tracking (v0.42+)
 
 ## Overview
 
 bd is a graph-based issue tracker for persistent memory across sessions. Use for multi-session work with complex dependencies; use TodoWrite for simple single-session tasks.
+
+**Key concepts:**
+- **Hash-based IDs**: Issues use IDs like `bd-a1b2` (not sequential numbers)
+- **JSONL source of truth**: `.beads/issues.jsonl` is git-tracked; SQLite is local cache
+- **Dependency-driven ready**: `bd ready` shows work with no open blockers
+- **30-second sync debounce**: Batches operations before auto-export
 
 ## When to Use bd vs TodoWrite
 
@@ -42,13 +48,24 @@ bd uses **JSONL as the source of truth**, with SQLite as a local cache:
 
 | File | Purpose | Committed to Git? |
 |------|---------|-------------------|
-| `.beads/beads.db` | SQLite cache (fast queries) | **No** (gitignored) |
+| `.beads/*.db` | SQLite cache (fast queries) | **No** (gitignored) |
 | `.beads/issues.jsonl` | Source of truth | **Yes** |
 | `.beads/metadata.json` | Repository metadata | **Yes** |
 
 **Auto-sync behavior:**
-- **Export**: After CRUD operations, bd exports to JSONL (5-second debounce)
+- **Export**: After CRUD operations, bd exports to JSONL (30-second debounce for batching)
 - **Import**: After `git pull`, first bd command auto-imports if JSONL is newer than DB
+
+### Manual Sync
+
+For explicit control over sync:
+
+```bash
+bd sync                       # Full cycle: export→commit→pull→import→push
+bd sync --status              # Show what would sync
+bd sync --dry-run             # Preview without executing
+bd sync --flush-only          # Export + commit only
+```
 
 ### Daemon for Auto-Commit
 
@@ -58,6 +75,7 @@ For hands-off JSONL commits, run the daemon:
 bd daemon --start --auto-commit           # Auto-commit after changes
 bd daemon --start --auto-commit --auto-push  # Also push to remote
 bd daemon --status                        # Check daemon status
+bd daemon --health                        # Show uptime, cache stats
 bd daemon --stop                          # Stop daemon
 ```
 
@@ -82,14 +100,6 @@ bd sync --merge
 
 # Or merge with dry-run first
 bd sync --merge --dry-run
-```
-
-**Sync commands:**
-```bash
-bd sync --status      # Show diff between sync branch and main
-bd sync --merge       # Merge sync branch to main
-bd sync --no-push     # Pull changes from remote without pushing
-bd sync --flush-only  # Manual export + commit (no merge)
 ```
 
 ### Configuration
@@ -138,13 +148,12 @@ This gives immediate shared context about available work without requiring user 
 
 ### Editor Integration
 
-For Claude Code, install hooks that auto-inject bd context:
+For AI-optimized context injection:
 
 ```bash
-bd setup claude    # Installs SessionStart/PreCompact hooks
+bd prime           # ~1-2k tokens of workflow context
+bd onboard         # Minimal snippet for AGENTS.md
 ```
-
-This runs `bd prime` at session start, providing ~1-2k tokens of workflow context automatically.
 
 **Note**: bd auto-discovers the database:
 - Uses `.beads/*.db` in current project if exists
@@ -185,6 +194,7 @@ bd ready
 bd ready --json              # For structured output
 bd ready --priority 0        # Filter by priority
 bd ready --assignee alice    # Filter by assignee
+bd ready --claim             # Atomically claim next work item
 ```
 
 **Create new issue:**
@@ -193,36 +203,44 @@ bd create "Fix login bug"
 bd create "Add OAuth" -p 0 -t feature
 bd create "Write tests" -d "Unit tests for auth module" --assignee alice
 bd create "Research caching" --design "Evaluate Redis vs Memcached"
+bd q "Quick capture"         # Returns only the ID
 ```
 
-**Update issue status:**
+**Update issue:**
 ```bash
-bd update issue-123 --status in_progress
-bd update issue-123 --priority 0
-bd update issue-123 --assignee bob
-bd update issue-123 --design "Decided to use Redis for persistence support"
+bd update bd-a1b2 --status in_progress
+bd update bd-a1b2 --priority 0
+bd update bd-a1b2 --notes "Progress: completed X, next: Y"
+bd update bd-a1b2 --design "Decided to use Redis for persistence support"
 ```
 
 **Close completed work:**
 ```bash
-bd close issue-123
-bd close issue-123 --reason "Implemented in PR #42"
-bd close issue-1 issue-2 issue-3 --reason "Bulk close related work"
+bd close bd-a1b2
+bd close bd-a1b2 --reason "Implemented in PR #42"
+bd close bd-a1 bd-a2 bd-a3 --reason "Bulk close related work"
 ```
 
 **Show issue details:**
 ```bash
-bd show issue-123
-bd show issue-123 --json
+bd show bd-a1b2
+bd show bd-a1b2 --json
 ```
 
 **List issues:**
 ```bash
-bd list
+bd list                      # Non-closed, limit 50
 bd list --status open
+bd list --status closed
 bd list --priority 0
 bd list --type bug
-bd list --assignee alice
+```
+
+**Other lifecycle:**
+```bash
+bd reopen bd-a1b2            # Reopen closed issue
+bd defer bd-a1b2             # Defer for later
+bd undefer bd-a1b2           # Restore deferred
 ```
 
 **For complete CLI reference with all flags and examples, read:** [references/CLI_REFERENCE.md](references/CLI_REFERENCE.md)
@@ -242,7 +260,7 @@ bd list --assignee alice
 ```bash
 # When encountering new work during a task:
 bd create "Found: auth doesn't handle profile permissions"
-bd dep add current-task-id new-issue-id --type discovered-from
+bd dep add bd-current bd-new --type discovered-from
 
 # Continue with original task - issue persists for later
 ```
@@ -253,24 +271,27 @@ bd dep add current-task-id new-issue-id --type discovered-from
 
 **Mark issues in_progress when starting work:**
 ```bash
-bd update issue-123 --status in_progress
+bd update bd-a1b2 --status in_progress
 ```
 
 **Update throughout work:**
 ```bash
+# Add progress notes (survives compaction)
+bd update bd-a1b2 --notes "COMPLETED: auth endpoint. IN PROGRESS: token refresh"
+
 # Add design notes as implementation progresses
-bd update issue-123 --design "Using JWT with RS256 algorithm"
+bd update bd-a1b2 --design "Using JWT with RS256 algorithm"
 
 # Update acceptance criteria if requirements clarify
-bd update issue-123 --acceptance "- JWT validation works\n- Tests pass\n- Error handling returns 401"
+bd update bd-a1b2 --acceptance "- JWT validation works\n- Tests pass\n- Error handling returns 401"
 ```
 
 **Close when complete:**
 ```bash
-bd close issue-123 --reason "Implemented JWT validation with tests passing"
+bd close bd-a1b2 --reason "Implemented JWT validation with tests passing"
 ```
 
-**Important**: Closed issues remain in database - they're not deleted, just marked complete for project history.
+**Important**: Closed issues remain in database - they're not deleted, just marked complete for project history. Use `bd reopen` to restore if needed.
 
 ### 3. Planning Phase (Dependency Graphs)
 
@@ -291,23 +312,26 @@ bd create "Add token refresh" -t task
 **Link with dependencies:**
 ```bash
 # parent-child for epic structure
-bd dep add auth-epic auth-setup --type parent-child
-bd dep add auth-epic auth-flow --type parent-child
+bd dep add bd-epic bd-setup --type parent-child
+bd dep add bd-epic bd-flow --type parent-child
 
 # blocks for ordering
-bd dep add auth-setup auth-flow
+bd dep add bd-setup bd-flow
 ```
 
 **For detailed dependency patterns and types, read:** [references/DEPENDENCIES.md](references/DEPENDENCIES.md)
 
 ## Dependency Types Reference
 
-bd supports four dependency types:
+bd supports four core dependency types (plus advanced types for specialized workflows):
 
-1. **blocks** - Hard blocker (issue A blocks issue B from starting)
+**Core types (use these for most workflows):**
+1. **blocks** - Hard blocker (issue A blocks issue B from starting) - affects `bd ready`
 2. **related** - Soft link (issues are related but not blocking)
 3. **parent-child** - Hierarchical (epic/subtask relationship)
 4. **discovered-from** - Provenance (issue B discovered while working on A)
+
+**Advanced types** (for specialized workflows): `waits-for`, `conditional-blocks`, `duplicates`, `supersedes`, `validates`, `tracks`. See CLI reference for details.
 
 **For complete guide on when to use each type with examples and patterns, read:** [references/DEPENDENCIES.md](references/DEPENDENCIES.md)
 
@@ -336,9 +360,9 @@ User asks for strategic document development:
 
 During main task, discover a problem:
 1. Create issue: `bd create "Found: inventory system needs refactoring"`
-2. Link using discovered-from: `bd dep add main-task new-issue --type discovered-from`
+2. Link using discovered-from: `bd dep add bd-main bd-new --type discovered-from`
 3. Assess: blocker or can defer?
-4. If blocker: `bd update main-task --status blocked`, work on new issue
+4. If blocker: `bd update bd-main --status blocked`, work on new issue
 5. If deferrable: note in issue, continue main task
 
 ### Pattern 3: Multi-Session Project Resume
@@ -347,7 +371,7 @@ Starting work after time away:
 1. Run `bd ready` to see available work
 2. Run `bd blocked` to understand what's stuck
 3. Run `bd list --status closed --limit 10` to see recent completions
-4. Run `bd show issue-id` on issue to work on
+4. Run `bd show bd-a1b2` on issue to work on
 5. Update status and begin work
 
 **For complete workflow walkthroughs with checklists, read:** [references/WORKFLOWS.md](references/WORKFLOWS.md)
@@ -406,11 +430,11 @@ Use clear, specific titles and include sufficient context in descriptions to res
 
 **Check project health:**
 ```bash
-bd stats
-bd stats --json
+bd status
+bd status --json
 ```
 
-Returns: total issues, open, in_progress, closed, blocked, ready, avg lead time
+Returns: total issues, open, in_progress, closed, blocked, ready counts, and project metadata.
 
 **Find blocked work:**
 ```bash
@@ -418,10 +442,16 @@ bd blocked
 bd blocked --json
 ```
 
-Use stats to:
+**Health checks:**
+```bash
+bd doctor              # Check installation health
+bd doctor --fix        # Auto-repair issues found
+```
+
+Use status to:
 - Report progress to user
 - Identify bottlenecks
-- Understand project velocity
+- Understand project state
 
 ## Advanced Features
 
@@ -438,27 +468,26 @@ bd create "Title" -t chore       # Maintenance or cleanup
 ### Priority Levels
 
 ```bash
-bd create "Title" -p 0    # Highest priority (critical)
+bd create "Title" -p 0    # Critical (highest)
 bd create "Title" -p 1    # High priority
 bd create "Title" -p 2    # Normal priority (default)
 bd create "Title" -p 3    # Low priority
+bd create "Title" -p 4    # Backlog (lowest)
 ```
 
 ### Bulk Operations
 
 ```bash
 # Close multiple issues at once
-bd close issue-1 issue-2 issue-3 --reason "Completed in sprint 5"
-
-# Create multiple issues from markdown file
-bd create --file issues.md
+bd close bd-a1 bd-a2 bd-a3 --reason "Completed in sprint 5"
 ```
 
 ### Dependency Visualization
 
 ```bash
 # Show full dependency tree for an issue
-bd dep tree issue-123
+bd dep tree bd-a1b2
+bd dep tree bd-a1b2 --format mermaid   # Output as diagram
 
 # Check for circular dependencies
 bd dep cycles
@@ -481,9 +510,9 @@ All bd commands support `--json` flag for structured output:
 
 ```bash
 bd ready --json
-bd show issue-123 --json
+bd show bd-a1b2 --json
 bd list --status open --json
-bd stats --json
+bd status --json
 ```
 
 Use JSON output when you need to parse results programmatically or extract specific fields.
@@ -500,20 +529,21 @@ Use JSON output when you need to parse results programmatically or extract speci
 - Closed issues remain in database permanently
 
 **If bd show can't find issue by name:**
-- `bd show` requires issue IDs, not issue titles
+- `bd show` requires issue IDs (like `bd-a1b2`), not issue titles
 - Workaround: `bd list | grep -i "search term"` to find ID first
-- Then: `bd show issue-id` with the discovered ID
+- Then: `bd show bd-a1b2` with the discovered ID
 - For glossaries/reference databases where names matter more than IDs, consider using markdown format alongside the database
 
 **If dependencies seem wrong:**
-- Use `bd show issue-id` to see full dependency tree
-- Use `bd dep tree issue-id` for visualization
+- Use `bd show bd-a1b2` to see full dependency tree
+- Use `bd dep tree bd-a1b2` for visualization
 - Dependencies are directional: `bd dep add from-id to-id` means from-id blocks to-id
 - See [references/DEPENDENCIES.md](references/DEPENDENCIES.md#common-mistakes)
 
 **If database seems out of sync:**
-- bd auto-syncs JSONL after each operation (5s debounce)
+- bd auto-syncs JSONL after each operation (30s debounce)
 - bd auto-imports JSONL when newer than DB (after git pull)
+- Manual sync: `bd sync`
 - Manual operations: `bd export`, `bd import`
 
 **If daemon won't start or sync isn't working:**

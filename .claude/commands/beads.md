@@ -4,7 +4,7 @@ argument-hint: [path/to/database.db]
 allowed-tools: [Bash, Read, Edit, Write, Glob, Grep]
 ---
 
-Activate beads (bd) issue tracking for this session.
+Activate beads (bd) issue tracking for this session (v0.42+).
 
 **Database path (optional):** $ARGUMENTS
 
@@ -49,20 +49,23 @@ Activate beads (bd) issue tracking for this session.
 # Check work
 bd ready                    # What's unblocked
 bd blocked                  # What's stuck and why
-bd show <id>                # Full details on one issue
+bd show bd-a1b2             # Full details on one issue
 
 # Create (with full context!)
 bd create "Title" -d "Description with context" -p 1
 bd create "Title" --design "Implementation approach"
+bd q "Quick capture"        # Returns only the ID
 
 # Update as you work
-bd update <id> --status in_progress
-bd update <id> --notes "Progress: did X, next: Y, blocker: Z"
-bd update <id> --design "Decided to use approach A because..."
+bd update bd-a1b2 --status in_progress
+bd update bd-a1b2 --notes "Progress: did X, next: Y, blocker: Z"
+bd update bd-a1b2 --design "Decided to use approach A because..."
 
 # Close when done
-bd close <id> --reason "Completed: summary of what was done"
+bd close bd-a1b2 --reason "Completed: summary of what was done"
 ```
+
+**Note:** IDs use hash format like `bd-a1b2`, not sequential numbers.
 
 ## During This Session
 
@@ -73,10 +76,11 @@ bd close <id> --reason "Completed: summary of what was done"
 
 ## Handoff Checkpoint
 
-Before ending session or if context is getting long, ensure:
+Before ending session or if context is getting long:
 - [ ] All in_progress items have current notes
 - [ ] Any discovered work is captured as new issues
 - [ ] Blockers are documented in the blocked issue's notes
 - [ ] Recent decisions are in design fields
+- [ ] Run `bd sync` to ensure JSONL is committed
 
 **Remember:** The JSONL file is committed to git. Your notes become part of the project's history.

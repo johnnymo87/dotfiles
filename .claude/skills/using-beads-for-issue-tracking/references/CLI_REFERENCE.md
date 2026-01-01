@@ -1,6 +1,6 @@
 # CLI Reference
 
-Complete command reference for bd (beads) CLI tool. All commands support `--json` flag for structured output.
+Complete command reference for bd (beads) CLI tool v0.42+. All commands support `--json` flag for structured output.
 
 ## Contents
 
@@ -9,7 +9,7 @@ Complete command reference for bd (beads) CLI tool. All commands support `--json
 - [Core Commands](#core-commands)
   - [bd ready](#bd-ready) - Find unblocked work
   - [bd create](#bd-create) - Create new issues
-  - [bd update](#bd-update) - Update issue status, priority, assignee
+  - [bd update](#bd-update) - Update issue fields
   - [bd close](#bd-close) - Close completed work
   - [bd show](#bd-show) - Show issue details
   - [bd list](#bd-list) - List issues with filters
@@ -17,15 +17,25 @@ Complete command reference for bd (beads) CLI tool. All commands support `--json
   - [bd dep add](#bd-dep-add) - Create dependencies
   - [bd dep tree](#bd-dep-tree) - Visualize dependency trees
   - [bd dep cycles](#bd-dep-cycles) - Detect circular dependencies
+  - [bd relate](#bd-relate) - Bidirectional soft link
 - [Monitoring Commands](#monitoring-commands)
-  - [bd stats](#bd-stats) - Project statistics
+  - [bd status](#bd-status) - Database overview and statistics
   - [bd blocked](#bd-blocked) - Find blocked work
-- [Data Management Commands](#data-management-commands)
-  - [bd export](#bd-export) - Export database to JSONL
-  - [bd import](#bd-import) - Import issues from JSONL
+- [Lifecycle Commands](#lifecycle-commands)
+  - [bd reopen](#bd-reopen) - Reopen closed issues
+  - [bd delete](#bd-delete) - Soft delete (tombstone)
+  - [bd defer / bd undefer](#bd-defer) - Defer work for later
+- [Sync Commands](#sync-commands)
+  - [bd sync](#bd-sync) - Full sync cycle
+  - [bd export / bd import](#bd-export) - Manual JSONL operations
+- [Daemon Commands](#daemon-commands)
+  - [bd daemon](#bd-daemon) - Background daemon management
+  - [bd daemons](#bd-daemons) - Multi-project daemon status
 - [Setup Commands](#setup-commands)
   - [bd init](#bd-init) - Initialize database
+  - [bd doctor](#bd-doctor) - Health checks and repair
   - [bd quickstart](#bd-quickstart) - Show quick start guide
+- [Advanced Commands](#advanced-commands)
 - [Common Workflows](#common-workflows)
 - [JSON Output](#json-output)
 - [Database Auto-Discovery](#database-auto-discovery)
@@ -34,35 +44,53 @@ Complete command reference for bd (beads) CLI tool. All commands support `--json
 
 ## Quick Reference
 
+### Core Commands (Daily Use)
+
 | Command | Purpose | Key Flags |
 |---------|---------|-----------|
-| `bd ready` | Find unblocked work | `--priority`, `--assignee`, `--limit`, `--json` |
-| `bd list` | List all issues with filters | `--status`, `--priority`, `--type`, `--assignee` |
-| `bd show` | Show issue details | `--json` |
-| `bd create` | Create new issue | `-t`, `-p`, `-d`, `--design`, `--acceptance` |
-| `bd update` | Update existing issue | `--status`, `--priority`, `--design` |
-| `bd close` | Close completed issue | `--reason` |
-| `bd dep add` | Add dependency | `--type` (blocks, related, parent-child, discovered-from) |
-| `bd dep tree` | Visualize dependency tree | (no flags) |
-| `bd dep cycles` | Detect circular dependencies | (no flags) |
-| `bd stats` | Get project statistics | `--json` |
+| `bd ready` | Find unblocked work | `--priority`, `--assignee`, `--limit`, `--claim` |
+| `bd list` | List issues with filters | `--status`, `--priority`, `--type`, `--assignee` |
+| `bd show <id>` | Show issue details | `--json` |
+| `bd create "Title"` | Create new issue | `-t`, `-p`, `-d`, `--design`, `--acceptance` |
+| `bd update <id>` | Update existing issue | `--status`, `--priority`, `--notes`, `--design` |
+| `bd close <id>` | Close completed issue | `--reason` |
+
+### Standard Commands
+
+| Command | Purpose | Key Flags |
+|---------|---------|-----------|
+| `bd dep add <from> <to>` | Add dependency | `--type` (blocks, related, parent-child, discovered-from) |
+| `bd dep tree <id>` | Visualize dependency tree | `--reverse`, `--format mermaid` |
+| `bd relate <id1> <id2>` | Bidirectional relates-to link | |
 | `bd blocked` | Find blocked issues | `--json` |
-| `bd export` | Export issues to JSONL | `--json` |
-| `bd import` | Import issues from JSONL | `--resolve-collisions` |
-| `bd init` | Initialize bd in directory | `--prefix` |
-| `bd quickstart` | Show quick start guide | (no flags) |
+| `bd reopen <id>` | Reopen closed issue | |
+| `bd sync` | Full sync cycle | `--dry-run`, `--merge`, `--status` |
+| `bd daemon` | Manage background daemon | `--start`, `--stop`, `--status`, `--health` |
+| `bd status` | Database overview + stats | `--json` |
+
+### Setup & Maintenance
+
+| Command | Purpose | Key Flags |
+|---------|---------|-----------|
+| `bd init` | Initialize bd in directory | `--prefix`, `--branch`, `--stealth` |
+| `bd doctor` | Health checks and auto-repair | `--fix` |
+| `bd quickstart` | Show quick start guide | |
+
+**Note:** Issue IDs use hash format like `bd-a1b2` or hierarchical `bd-a1b2.1` for subtasks.
 
 ## Global Flags
 
 Available for all commands:
 
 ```bash
---json                 # Output in JSON format
+--json                 # Output in JSON format (structured, parseable)
 --db /path/to/db       # Specify database path (default: auto-discover)
 --actor "name"         # Actor name for audit trail
---no-auto-flush        # Disable automatic JSONL sync
+--no-auto-flush        # Disable automatic JSONL export
 --no-auto-import       # Disable automatic JSONL import
 ```
+
+**Tip:** Always use `--json` when parsing output programmatically.
 
 ## Core Commands
 
@@ -76,9 +104,12 @@ bd ready --json               # JSON format
 bd ready --priority 0         # Only priority 0 (critical)
 bd ready --assignee alice     # Only assigned to alice
 bd ready --limit 5            # Limit to 5 results
+bd ready --claim              # Atomically claim next work item
 ```
 
 **Use at session start** to see available work.
+
+**Sort behavior:** By default uses "hybrid" policy (recent work by priority, older work by age). Can also set to `priority` or `oldest`.
 
 ---
 
@@ -97,26 +128,31 @@ bd create "Title" --assignee alice
 
 **Flags**:
 - `-t, --type`: task (default), bug, feature, epic, chore
-- `-p, --priority`: 0-3 (default: 2)
+- `-p, --priority`: 0-4 (0=critical, 1=high, 2=normal, 3=low, 4=backlog; default: 2)
 - `-d, --description`: Issue description
-- `--design`: Design notes
-- `--acceptance`: Acceptance criteria
+- `--design`: Design notes / implementation approach
+- `--acceptance`: Acceptance criteria / definition of done
 - `--assignee`: Who should work on this
+
+**Quick capture:** Use `bd q "Title"` to create and return only the ID (useful for scripting).
 
 ---
 
 ### bd update
 
-Update an existing issue's metadata.
+Update an existing issue's fields.
 
 ```bash
-bd update issue-123 --status in_progress
-bd update issue-123 --priority 0
-bd update issue-123 --design "Decided to use Redis"
-bd update issue-123 --acceptance "Tests passing"
+bd update bd-a1b2 --status in_progress
+bd update bd-a1b2 --priority 0
+bd update bd-a1b2 --notes "Progress: completed X, next: Y"
+bd update bd-a1b2 --design "Decided to use Redis"
+bd update bd-a1b2 --acceptance "Tests passing"
 ```
 
-**Status values**: open, in_progress, blocked, closed
+**Status values**: `open`, `in_progress`, `blocked`, `deferred`, `closed`
+
+**Tip:** Use `--notes` to capture progress that survives compaction.
 
 ---
 
@@ -125,12 +161,12 @@ bd update issue-123 --acceptance "Tests passing"
 Close (complete) an issue.
 
 ```bash
-bd close issue-123
-bd close issue-123 --reason "Implemented in PR #42"
-bd close issue-1 issue-2 issue-3 --reason "Bulk close"
+bd close bd-a1b2
+bd close bd-a1b2 --reason "Implemented in PR #42"
+bd close bd-a1 bd-a2 bd-a3 --reason "Bulk close"
 ```
 
-**Note**: Closed issues remain in database for history.
+**Note**: Closed issues remain in database for history. Use `bd reopen` to reopen.
 
 ---
 
@@ -139,8 +175,8 @@ bd close issue-1 issue-2 issue-3 --reason "Bulk close"
 Show detailed information about a specific issue.
 
 ```bash
-bd show issue-123
-bd show issue-123 --json
+bd show bd-a1b2
+bd show bd-a1b2 --json
 ```
 
 Shows: all fields, dependencies, dependents, audit history.
@@ -149,16 +185,19 @@ Shows: all fields, dependencies, dependents, audit history.
 
 ### bd list
 
-List all issues with optional filters.
+List issues with optional filters.
 
 ```bash
-bd list                          # All issues
+bd list                          # Non-closed issues (default limit: 50)
 bd list --status open            # Only open
-bd list --priority 0             # Critical
+bd list --status closed          # Only closed
+bd list --priority 0             # Critical only
 bd list --type bug               # Only bugs
 bd list --assignee alice         # By assignee
-bd list --status closed --limit 10  # Recent completions
+bd list --limit 100              # Override default limit
 ```
+
+**Note:** Default excludes closed issues and limits to 50 results.
 
 ---
 
@@ -169,18 +208,20 @@ bd list --status closed --limit 10  # Recent completions
 Add a dependency between issues.
 
 ```bash
-bd dep add from-issue to-issue                      # blocks (default)
-bd dep add from-issue to-issue --type blocks
-bd dep add from-issue to-issue --type related
-bd dep add epic-id task-id --type parent-child
-bd dep add original-id found-id --type discovered-from
+bd dep add bd-a1 bd-b2                       # blocks (default)
+bd dep add bd-a1 bd-b2 --type blocks         # explicit blocks
+bd dep add bd-a1 bd-b2 --type related        # soft link
+bd dep add bd-epic bd-task --type parent-child
+bd dep add bd-main bd-found --type discovered-from
 ```
 
-**Dependency types**:
-1. **blocks**: from-issue blocks to-issue (hard blocker)
-2. **related**: Soft link (no blocking)
+**Core dependency types** (4 main types for most workflows):
+1. **blocks**: from-issue blocks to-issue (affects `bd ready`)
+2. **related**: Soft link (informational only)
 3. **parent-child**: Epic/subtask hierarchy
 4. **discovered-from**: Tracks origin of discovery
+
+**Additional types** (for advanced workflows): `waits-for`, `conditional-blocks`, `replies-to`, `duplicates`, `supersedes`, `tracks`, `validates`. See [DEPENDENCIES.md](DEPENDENCIES.md) for details.
 
 ---
 
@@ -189,14 +230,13 @@ bd dep add original-id found-id --type discovered-from
 Visualize full dependency tree for an issue.
 
 ```bash
-bd dep tree issue-123
-
-# Limit tree depth (default: 50)
-bd dep tree issue-123 --max-depth 10
-bd dep tree issue-123 -d 10
+bd dep tree bd-a1b2
+bd dep tree bd-a1b2 --reverse          # Show what this blocks
+bd dep tree bd-a1b2 --format mermaid   # Output as Mermaid diagram
+bd dep tree bd-a1b2 --max-depth 10     # Limit depth
 ```
 
-Shows all dependencies and dependents in tree format. Use `--max-depth` to limit traversal depth for very deep trees.
+Shows all dependencies and dependents in tree format.
 
 ---
 
@@ -212,18 +252,30 @@ Finds dependency cycles that would prevent work from being ready.
 
 ---
 
-## Monitoring Commands
+### bd relate
 
-### bd stats
-
-Get project statistics.
+Create bidirectional `relates-to` link between issues.
 
 ```bash
-bd stats
-bd stats --json
+bd relate bd-a1 bd-b2
 ```
 
-Returns: total, open, in_progress, closed, blocked, ready, avg lead time.
+Shorthand for creating a symmetric relationship. Both issues will show each other as related.
+
+---
+
+## Monitoring Commands
+
+### bd status
+
+Get database overview and statistics.
+
+```bash
+bd status
+bd status --json
+```
+
+Returns: total issues, open, in_progress, closed, blocked, ready counts, and project metadata.
 
 ---
 
@@ -240,7 +292,71 @@ Use to identify bottlenecks when ready list is empty.
 
 ---
 
-## Data Management Commands
+## Lifecycle Commands
+
+### bd reopen
+
+Reopen a closed issue.
+
+```bash
+bd reopen bd-a1b2
+```
+
+Sets status back to `open`.
+
+---
+
+### bd delete
+
+Soft delete an issue (sets status to `tombstone`).
+
+```bash
+bd delete bd-a1b2
+```
+
+Tombstoned issues are automatically cleaned up after TTL (default 30 days). Use `bd cleanup` to manually purge.
+
+---
+
+### bd defer
+
+Defer work for later.
+
+```bash
+bd defer bd-a1b2            # Set status to deferred
+bd undefer bd-a1b2          # Restore to open
+```
+
+Deferred issues won't appear in `bd ready` but remain visible in `bd list`.
+
+---
+
+## Sync Commands
+
+### bd sync
+
+Full sync cycle: export → commit → pull → import → push.
+
+```bash
+bd sync                       # Full sync cycle
+bd sync --status              # Show diff between sync branch and main
+bd sync --dry-run             # Preview what would happen
+bd sync --merge               # Merge sync branch to main (protected branch workflow)
+bd sync --flush-only          # Export + commit without git pull/push
+bd sync --import-only         # Import from JSONL without git operations
+```
+
+**Timing:** bd uses 30-second debounce for batch operations before auto-export.
+
+**Recommended workflow:**
+```bash
+# At session end
+git pull --rebase
+bd sync
+git push
+```
+
+---
 
 ### bd export
 
@@ -248,16 +364,10 @@ Export all issues to JSONL format.
 
 ```bash
 bd export > issues.jsonl
-bd export --json  # Same output, explicit flag
+bd export -i custom.jsonl     # Export to specific file
 ```
 
-**Use cases:**
-- Manual backup before risky operations
-- Sharing issues across databases
-- Version control / git tracking
-- Data migration or analysis
-
-**Note**: bd auto-exports to `.beads/*.jsonl` after each operation (5s debounce). Manual export is rarely needed.
+**Note**: bd auto-exports to `.beads/issues.jsonl` after operations (30s debounce). Manual export rarely needed.
 
 ---
 
@@ -267,6 +377,7 @@ Import issues from JSONL format.
 
 ```bash
 bd import < issues.jsonl
+bd import -i custom.jsonl
 bd import --resolve-collisions < issues.jsonl
 ```
 
@@ -274,23 +385,38 @@ bd import --resolve-collisions < issues.jsonl
 - `--resolve-collisions` - Automatically remap conflicting issue IDs
 
 **Use cases for --resolve-collisions:**
-- **Reimporting** after manual JSONL edits - if you closed an issue in the JSONL that's still open in DB
-- **Merging databases** - importing issues from another database with overlapping IDs
-- **Restoring from backup** - when database state has diverged from JSONL
+- Reimporting after manual JSONL edits
+- Merging databases with overlapping IDs
+- Restoring from backup when state has diverged
 
-**What --resolve-collisions does:**
-1. Detects ID conflicts (same ID, different status/content)
-2. Remaps conflicting imports to new IDs
-3. Updates all references and dependencies to use new IDs
-4. Reports remapping (e.g., "mit-1 → bd-4")
+---
 
-**Without --resolve-collisions**: Import fails on first conflict.
+## Daemon Commands
 
-**Example scenario:**
+### bd daemon
+
+Manage background daemon for a project.
+
 ```bash
-# You have: mit-1 (open) in database
-# Importing: mit-1 (closed) from JSONL
-# Result: Import creates bd-4 with closed status, preserves existing mit-1
+bd daemon --start                        # Start daemon
+bd daemon --start --auto-commit          # Auto-commit after changes
+bd daemon --start --auto-commit --auto-push  # Also push to remote
+bd daemon --stop                         # Stop daemon
+bd daemon --status                       # Check if running
+bd daemon --health                       # Show uptime, cache stats, metrics
+```
+
+**Architecture:** Per-project daemon at `.beads/bd.sock`. Provides connection pooling and performance optimization.
+
+---
+
+### bd daemons
+
+Manage daemons across multiple projects.
+
+```bash
+bd daemons list                 # List all running daemons
+bd daemons health               # Health status of all daemons
 ```
 
 ---
@@ -302,11 +428,28 @@ bd import --resolve-collisions < issues.jsonl
 Initialize bd in current directory.
 
 ```bash
-bd init                    # Auto-detect prefix
-bd init --prefix api       # Custom prefix
+bd init                        # Interactive setup
+bd init --quiet                # Non-interactive (for agents)
+bd init --prefix api           # Custom prefix for IDs
+bd init --branch beads-sync    # Use separate sync branch (protected main)
+bd init --stealth              # Local-only, doesn't commit to repo
+bd init --from-jsonl file.jsonl  # Bootstrap from existing JSONL
 ```
 
-Creates `.beads/` directory and database.
+Creates `.beads/` directory with database and metadata.
+
+---
+
+### bd doctor
+
+Health checks and auto-repair.
+
+```bash
+bd doctor                      # Check installation health
+bd doctor --fix                # Auto-repair issues found
+```
+
+Checks: database integrity, git hooks, daemon status, JSONL sync state.
 
 ---
 
@@ -322,27 +465,46 @@ Displays built-in reference for command syntax and workflows.
 
 ---
 
+## Advanced Commands
+
+These commands are for specialized workflows. See `bd <command> --help` for details.
+
+| Command | Purpose |
+|---------|---------|
+| `bd compact` | Semantic summarization of old closed issues (memory decay) |
+| `bd cleanup` | Delete closed issues, prune tombstones |
+| `bd validate` | Comprehensive database health checks |
+| `bd repair-deps` | Fix orphaned dependencies |
+| `bd migrate` | Data migration (hash-ids, tombstones) |
+| `bd prime` | AI-optimized workflow context (~1-2k tokens) |
+| `bd onboard` | Minimal snippet for AGENTS.md |
+| `bd preflight` | PR readiness checks (test/lint/version) |
+| `bd duplicate <id> --of <other>` | Mark issue as duplicate |
+| `bd supersede <id> --by <other>` | Mark issue as superseded |
+
+---
+
 ## Common Workflows
 
 ### Session Start
 
 ```bash
 bd ready --json
-bd show issue-123
-bd update issue-123 --status in_progress
+bd show bd-a1b2
+bd update bd-a1b2 --status in_progress
 ```
 
 ### Discovery During Work
 
 ```bash
 bd create "Found: bug in auth" -t bug
-bd dep add current-issue new-issue --type discovered-from
+bd dep add bd-current bd-new --type discovered-from
 ```
 
 ### Completing Work
 
 ```bash
-bd close issue-123 --reason "Implemented with tests passing"
+bd close bd-a1b2 --reason "Implemented with tests passing"
 bd ready  # See what unblocked
 ```
 
@@ -353,11 +515,20 @@ bd create "OAuth Integration" -t epic
 bd create "Set up credentials" -t task
 bd create "Implement flow" -t task
 
-bd dep add oauth-epic oauth-creds --type parent-child
-bd dep add oauth-epic oauth-flow --type parent-child
-bd dep add oauth-creds oauth-flow  # creds blocks flow
+bd dep add bd-epic bd-creds --type parent-child
+bd dep add bd-epic bd-flow --type parent-child
+bd dep add bd-creds bd-flow  # creds blocks flow
 
-bd dep tree oauth-epic
+bd dep tree bd-epic
+```
+
+### End of Session
+
+```bash
+git pull --rebase
+bd sync
+git push
+git status   # Verify "up to date with origin/main"
 ```
 
 ---
@@ -368,9 +539,9 @@ All commands support `--json` for structured output:
 
 ```bash
 bd ready --json
-bd show issue-123 --json
+bd show bd-a1b2 --json
 bd list --status open --json
-bd stats --json
+bd status --json
 ```
 
 Use when parsing programmatically or extracting specific fields.
@@ -396,12 +567,13 @@ bd finds database in this order:
 
 bd automatically syncs with git:
 
-- **After each operation**: Exports to JSONL (5s debounce)
+- **After operations**: Exports to JSONL (30-second debounce for batching)
 - **After git pull**: Imports from JSONL if newer than DB
 
 **Files**:
-- `.beads/*.jsonl` - Source of truth (git-tracked)
+- `.beads/issues.jsonl` - Source of truth (git-tracked)
 - `.beads/*.db` - Local cache (gitignored)
+- `.beads/metadata.json` - Repository metadata (git-tracked)
 
 ### Git Integration Troubleshooting
 
@@ -450,11 +622,12 @@ cat .gitignore | grep beads
 ```bash
 bd ready
 bd list
-bd stats
+bd status
 bd blocked
-bd export
+bd sync
 bd version
 bd quickstart
+bd doctor
 bd dep cycles
 bd --help
 bd [command] --help  # For any subcommand help
@@ -473,7 +646,7 @@ bd ready --json | jq '.[0].id'
 
 **Bulk operations**:
 ```bash
-bd close issue-1 issue-2 issue-3 --reason "Sprint complete"
+bd close bd-a1 bd-a2 bd-a3 --reason "Sprint complete"
 ```
 
 **Quick filtering**:
@@ -481,8 +654,14 @@ bd close issue-1 issue-2 issue-3 --reason "Sprint complete"
 bd list --status open --priority 0 --type bug
 ```
 
+**Quick capture (returns ID only)**:
+```bash
+bd q "Fix the auth bug"
+```
+
 **Built-in help**:
 ```bash
 bd quickstart       # Comprehensive guide
 bd create --help    # Command-specific help
+bd doctor           # Check installation health
 ```
