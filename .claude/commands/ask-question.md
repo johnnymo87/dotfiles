@@ -1,6 +1,6 @@
 ---
 description: Draft a Stack Exchange question about a technical problem encountered during development
-argument-hint: [draft] topic
+argument-hint: [draft]
 allowed-tools: [Read, Glob, Grep, Bash]
 ---
 
@@ -122,13 +122,13 @@ Help me draft a Stack Exchange question about a technical problem I've encounter
 
    If $ARGUMENTS starts with `draft`, skip this step - just tell the user where the file was saved.
 
-   Otherwise, send the question to ChatGPT using the cgpt CLI:
+   Otherwise, send the question to ChatGPT using the ask-question CLI:
 
    ```bash
-   cgpt -f /tmp/stackexchange-{site}-{topic-slug}-question.md \
-        -o /tmp/stackexchange-{site}-{topic-slug}-answer.md
+   ask-question -f /tmp/stackexchange-{site}-{topic-slug}-question.md \
+                -o /tmp/stackexchange-{site}-{topic-slug}-answer.md
    ```
 
-   This will block for 30-120 seconds while ChatGPT generates a response.
+   This will block for 30-360 seconds while ChatGPT generates a response.
 
-   After cgpt returns successfully, read the answer file and discuss it with the user. Summarize key insights and recommendations from the response.
+   After ask-question returns successfully, read the answer file and discuss it with the user. Summarize key insights and recommendations from the response.
