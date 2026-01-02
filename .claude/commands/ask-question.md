@@ -1,11 +1,15 @@
 ---
 description: Draft a Stack Exchange question about a technical problem encountered during development
+argument-hint: [draft] topic
 allowed-tools: [Read, Glob, Grep, Bash]
 ---
 
-Help me draft a Stack Exchange question about a technical problem I've encountered.
+Help me draft a Stack Exchange question about a technical problem I've encountered, then send it to ChatGPT for research.
 
-**Topic/error (optional):** $ARGUMENTS
+**Arguments:** $ARGUMENTS
+
+- If first word is `draft`: Only write the question file, skip sending to ChatGPT
+- Otherwise: Write question, send to ChatGPT, read answer, and discuss
 
 **Process:**
 
@@ -114,6 +118,17 @@ Help me draft a Stack Exchange question about a technical problem I've encounter
 - Include version numbers - they matter!
 - If asking about alternatives, explain what you've already considered and why each might not work
 
-**After writing:**
-- Tell the user where the file was saved and which Stack Exchange site it targets
-- Note that after posting and getting an answer, expect that they will save the answer to a `stackexchange-{site}-{topic-slug}-answer.md` companion file
+7. **Send to ChatGPT (unless draft mode)**
+
+   If $ARGUMENTS starts with `draft`, skip this step - just tell the user where the file was saved.
+
+   Otherwise, send the question to ChatGPT using the cgpt CLI:
+
+   ```bash
+   cgpt -f /tmp/stackexchange-{site}-{topic-slug}-question.md \
+        -o /tmp/stackexchange-{site}-{topic-slug}-answer.md
+   ```
+
+   This will block for 30-120 seconds while ChatGPT generates a response.
+
+   After cgpt returns successfully, read the answer file and discuss it with the user. Summarize key insights and recommendations from the response.
