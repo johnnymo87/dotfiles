@@ -38,10 +38,11 @@ Get notified on your phone when Claude Code completes tasks or needs input.
 ```
 
 **Flow:**
-1. `on-session-start.sh` hook registers session with daemon
+1. `on-session-start.sh` hook registers session with daemon (captures PID, start_time, tmux pane_id)
 2. `/notify-telegram` opts session into notifications
 3. `on-stop.sh` / `on-subagent-stop.sh` hooks send stop events
 4. Daemon forwards to Telegram via bot API
+5. Daemon validates session liveness every 60s (PID + start_time check) and cleans up dead sessions
 
 ## Prerequisites
 
@@ -156,7 +157,8 @@ When Claude stops (task complete or waiting for input):
 - When sending notifications, the daemon stores `message_id -> token` in SQLite
 - When you reply to a message, Telegram includes `reply_to_message.message_id`
 - The daemon looks up the token and routes your command to the right session
-- Mappings are single-use (deleted after routing) with 24h TTL
+- Message-to-token mappings have 24h TTL
+- Command tokens also expire after 24 hours
 
 **Fallback (`/cmd TOKEN`):**
 - If the notification is old (>24h) or you've already replied to it
@@ -196,16 +198,31 @@ cat ~/.claude/runtime/sessions/$session_id/notify_label
 
 ### Issue: Wrong session receiving notifications
 
-**Cause:** Stale session files from previous runs
+**Possible causes:**
 
-**Solution:** Clean up old runtime files:
+1. **Stale session files** - Old ppid-map or pane-map entries pointing to wrong session
+2. **Stale tmux transport data** - If tmux windows were renumbered, the stored `session:window.pane` may point to the wrong pane
+
+**Solutions:**
+
+**Clean up old runtime files:**
 ```bash
 # Remove old ppid-map entries (keep recent ones)
 find ~/.claude/runtime/ppid-map -type f -mtime +1 -delete
 
 # Or clean all and restart Claude Code
 rm -rf ~/.claude/runtime/ppid-map/*
+rm -rf ~/.claude/runtime/pane-map/*
 rm -rf ~/.claude/runtime/sessions/*
+```
+
+**Restart affected sessions:**
+Sessions capture tmux `pane_id` (e.g., `%47`) at startup, which is stable within a tmux server's lifetime. If a session was started before this fix, restart it to pick up proper pane_id tracking.
+
+**Check daemon logs:**
+```bash
+# Look for injection target issues
+cat /tmp/claude/tasks/<daemon-task>.output | grep -E "(inject|target)"
 ```
 
 ### Issue: "Session not found" from daemon
@@ -242,14 +259,20 @@ cat .env | grep TELEGRAM
 
 ### Issue: Swipe-reply not working
 
-**"That notification has expired" message:**
-- The message_id -> token mapping expired (24h TTL) or was already used
-- Use `/cmd TOKEN` format from the notification instead
+**"Token expired" message:**
+- Command tokens expire after 24 hours
+- Use `/cmd TOKEN` format from the notification if available, or wait for next notification
 
 **Reply sent but Claude didn't receive it:**
 - Check webhook server logs for injection errors
-- Verify tmux pane targeting: `transport.tmux_session` should be `session:window.pane` format (e.g., `3:3.0`)
-- If just session name (e.g., `3`), restart Claude Code session to re-register with full pane info
+- Look for `[WARN] nvim injection failed` followed by tmux fallback attempts
+- If pane_id is missing, restart the Claude session to capture it
+
+**Check webhook server logs:**
+```bash
+# Look for injection attempts and errors
+cat /tmp/claude/tasks/<daemon-task>.output | tail -50
+```
 
 **Check SQLite mapping:**
 ```bash
