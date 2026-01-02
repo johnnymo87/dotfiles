@@ -42,12 +42,15 @@ printf '%s\n' "$transcript_path" > "${dir}/transcript_path"
 printf '%s\n' "$session_id"      > "${dir}/session_id"
 
 # Detect tmux session if running inside tmux
-# Capture full pane target (session:window.pane) for accurate injection
+# Capture pane_id (e.g., %47) which is stable within tmux server lifetime
+# Note: session:window.pane format is UNSTABLE - windows can be renumbered!
 tmux_session=""
 tmux_pane=""
+tmux_pane_id=""
 if [[ -n "${TMUX:-}" ]]; then
     tmux_session="$(tmux display-message -p '#{session_name}' 2>/dev/null || true)"
     tmux_pane="$(tmux display-message -p '#{session_name}:#{window_index}.#{pane_index}' 2>/dev/null || true)"
+    tmux_pane_id="$(tmux display-message -p '#{pane_id}' 2>/dev/null || true)"
 fi
 
 # Notify daemon of session start (fire-and-forget)
@@ -88,9 +91,10 @@ if [[ -n "$session_id" ]]; then
         --arg nvim_socket "${NVIM:-}" \
         --arg tmux_session "$tmux_session" \
         --arg tmux_pane "$tmux_pane" \
+        --arg tmux_pane_id "$tmux_pane_id" \
         --argjson notify "$notify_flag" \
         --arg label "$notify_label" \
-        '{session_id: $session_id, ppid: $ppid, pid: $pid, start_time: $start_time, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane, notify: $notify, label: $label}')
+        '{session_id: $session_id, ppid: $ppid, pid: $pid, start_time: $start_time, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane, tmux_pane_id: $tmux_pane_id, notify: $notify, label: $label}')
 
     curl -sS --connect-timeout 1 --max-time 2 \
         -X POST "http://127.0.0.1:3001/session-start" \
