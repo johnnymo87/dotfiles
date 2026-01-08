@@ -1,58 +1,46 @@
 ---
-description: Draft a Stack Exchange question about a technical problem encountered during development
+description: Draft a technical research question and send to ChatGPT for investigation
 argument-hint: [draft]
 allowed-tools: [Read, Glob, Grep, Bash]
 ---
 
-Help me draft a Stack Exchange question about a technical problem I've encountered, then send it to ChatGPT for research.
+Help me draft a technical research question about a problem I've encountered, then send it to ChatGPT for research.
 
 **Arguments:** $ARGUMENTS
 
 - If first word is `draft`: Only write the question file, skip sending to ChatGPT
 - Otherwise: Write question, send to ChatGPT, read answer, and discuss
 
+**Key Principle: Curiosity over confidence.** The goal is to get useful research, not to sound smart. Be explicit about what we know vs. what we're guessing. Wrong assumptions waste ChatGPT's reasoning on the wrong problem.
+
 **Process:**
 
-1. **Determine the appropriate Stack Exchange site**
-
-   Based on the nature of the problem, recommend one of:
-
-   | Site | Best For | Not For |
-   |------|----------|---------|
-   | **Stack Overflow** | Specific coding problems, debugging, "how do I do X in language Y" | Design opinions, code review |
-   | **Code Review** | Working code that could be improved (style, performance, idioms) | Broken code, hypotheticals |
-   | **Software Engineering** | Architecture, design patterns, methodology, trade-offs | Implementation details, debugging |
-   | **DevOps** | CI/CD, infrastructure, deployment, containers | Application code issues |
-   | **DBA** | Database design, query optimization, administration | ORM/application-level DB code |
-
-   State your recommendation and brief rationale before proceeding.
-
-2. **Understand the problem context**
+1. **Understand the problem context**
    - If topic provided, research it in the current codebase
    - Look at recent errors, code changes, or discussions in our conversation
    - Identify the specific technical issue (error message, unexpected behavior, architectural question)
 
-3. **Gather environmental context**
+2. **Gather environmental context**
    - Check language/framework versions (package.json, build.gradle, pom.xml, MODULE.bazel, etc.)
    - Identify relevant dependencies and their versions
    - Note any monorepo or build system constraints
 
-4. **Create minimal reproduction**
+3. **Create minimal reproduction**
    - Extract the specific code that demonstrates the problem
    - Remove project-specific details that aren't relevant
    - Include configuration files if relevant (application.yml, etc.)
 
-5. **Write the question in a local markdown file**
+4. **Write the question in a local markdown file**
 
-   **File location:** Write to the `/tmp/` directory (yes, the global tmp directory). Use naming pattern `stackexchange-{site}-{topic-slug}-question.md` (e.g., `stackexchange-codereview-caching-strategy-question.md`).
+   **File location:** Write to `/tmp/` using pattern `research-{topic-slug}-question.md` (e.g., `research-bazel-caching-question.md`).
 
    **Structure the question with these sections:**
 
    ```markdown
    # [Descriptive title as a question]
 
-   ## Tags
-   `tag1` `tag2` `tag3` (5 tags max, most specific first)
+   ## Keywords
+   `keyword1` `keyword2` `keyword3` (help ChatGPT understand the domain)
 
    ## Question
 
@@ -82,53 +70,60 @@ Help me draft a Stack Exchange question about a technical problem I've encounter
    [Exact error message or description of unexpected behavior]
    ```
 
-   ### What I've Tried
+   ### What We Know (verified facts)
 
-   1. [Attempt 1 and result]
-   2. [Attempt 2 and result]
-   3. [Attempt 3 and result]
+   - [Fact 1 - how we verified it]
+   - [Fact 2 - how we verified it]
 
-   ### Questions
+   ### What We're Uncertain About
+
+   - [Hypothesis 1 - why we suspect this, confidence level]
+   - [Hypothesis 2 - why we suspect this, confidence level]
+   - [Gap in understanding - what we haven't checked yet]
+
+   ### Specific Questions
 
    1. [Specific question 1]
    2. [Specific question 2 - optional]
    3. [Specific question 3 - optional]
 
-   ### Broader Context
+   ### Constraints
 
-   [Brief explanation of why this matters - the business/project context that helps answerers understand the constraints and suggest appropriate solutions. Mention any hard constraints like "monorepo-wide version X" or "must use technology Y".]
+   [Hard constraints that limit solutions: "must use X", "can't change Y", "monorepo requires Z". Only include real constraints, not preferences.]
    ```
 
-6. **Quality checklist before finishing**
+5. **Honesty checklist before finishing**
    - [ ] Title is a specific question (not "Problem with X")
    - [ ] Code is minimal but complete (can be copy-pasted to reproduce)
    - [ ] Error message is exact (not paraphrased)
-   - [ ] "What I've tried" shows due diligence
+   - [ ] "What We Know" only contains things we actually verified
+   - [ ] "What We're Uncertain About" honestly captures our gaps
+   - [ ] No fabricated claims (e.g., "tested on Linux" when we didn't)
+   - [ ] Confidence levels are calibrated (don't overstate certainty)
    - [ ] Questions are specific and answerable
-   - [ ] No sensitive info (credentials, internal URLs, company names in paths)
-   - [ ] Tags are accurate (check they exist on the target site)
-   - [ ] Broader context explains constraints without unnecessary detail
-   - [ ] Question fits the chosen site's scope (see step 1)
+   - [ ] No sensitive info (credentials, internal URLs, company names)
+   - [ ] Constraints are real constraints, not preferences
 
 **Writing style guidelines:**
 - Be concise but complete
-- Use "I" not "we" (Stack Exchange convention)
+- Use "we" (collaborative tone with the user)
 - Show the problem, don't just describe it
-- Anticipate follow-up questions and address them preemptively
+- Explicitly state what you haven't tested or checked
 - Include version numbers - they matter!
-- If asking about alternatives, explain what you've already considered and why each might not work
+- If uncertain about something, say so rather than guessing
 
-7. **Send to ChatGPT (unless draft mode)**
+6. **Send to ChatGPT (unless draft mode)**
 
    If $ARGUMENTS starts with `draft`, skip this step - just tell the user where the file was saved.
 
    Otherwise, send the question to ChatGPT using the ask-question CLI:
 
    ```bash
-   ask-question -f /tmp/stackexchange-{site}-{topic-slug}-question.md \
-                -o /tmp/stackexchange-{site}-{topic-slug}-answer.md
+   ask-question -f /tmp/research-{topic-slug}-question.md \
+                -o /tmp/research-{topic-slug}-answer.md \
+                -t 1200000
    ```
 
-   This will block for 30-360 seconds while ChatGPT generates a response.
+   **Important:** Always use a timeout of at least 20 minutes (`-t 1200000`). ChatGPT's "Extended Thinking" mode can take several minutes for complex questions. Never use a shorter timeout.
 
    After ask-question returns successfully, read the answer file and discuss it with the user. Summarize key insights and recommendations from the response.
