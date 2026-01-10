@@ -100,8 +100,9 @@ local function handle_send(name, command)
   end
 
   -- Send command to the terminal job
+  -- Use \r (carriage return) for Enter, not \n (line feed)
   local success, err = pcall(function()
-    vim.fn.chansend(instance.job_id, command .. "\n")
+    vim.fn.chansend(instance.job_id, command .. "\r")
   end)
 
   if not success then
