@@ -553,13 +553,39 @@ Use when parsing programmatically or extracting specific fields.
 bd finds database in this order:
 
 1. `--db` flag: `bd ready --db /path/to/db.db`
-2. `$BEADS_DB` environment variable
-3. `.beads/*.db` in current directory or ancestors
+2. `$BEADS_DIR` environment variable (points to `.beads/` directory)
+3. `.beads/*.db` in current directory or ancestors (nearest wins)
 4. `~/.beads/default.db` as fallback
 
 **Project-local** (`.beads/`): Project-specific work, git-tracked
 
 **Global fallback** (`~/.beads/`): Cross-project tracking, personal tasks
+
+### Monorepo / Nested Directory Handling
+
+bd uses **nearest-first discovery** - it walks from cwd upward and returns the first `.beads/` found. This means subdirectories can have their own databases:
+
+```
+~/Code/monorepo/           # has .beads/ (parent project)
+~/Code/monorepo/service-a/ # can have its own .beads/ (takes precedence when working here)
+```
+
+**Option 1: Init in the subdirectory** (permanent)
+```bash
+cd ~/Code/monorepo/service-a
+bd init --prefix svc-a
+```
+From `service-a/`, bd will now find `service-a/.beads/` first.
+
+**Option 2: Use `BEADS_DIR` environment variable** (session-based)
+```bash
+export BEADS_DIR=~/Code/monorepo/service-a/.beads
+```
+Useful when you want to temporarily target a specific database without permanent init.
+
+**Git root boundary:** bd stops searching at the git root. If the subdirectory is a separate git repo (submodule, worktree), it won't see the parent's `.beads/` at all.
+
+**Redirect (opposite case):** If you want multiple directories to share ONE database, create a `.beads/redirect` file containing the path to the shared `.beads/` directory.
 
 ---
 
