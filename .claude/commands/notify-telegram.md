@@ -43,6 +43,14 @@ Enable Telegram notifications for this session so you'll be alerted when tasks c
    echo "<LABEL>" > ~/.claude/runtime/sessions/<SESSION_ID>/notify_label
    ```
 
+4. **Register with ccremote** (if running inside nvim terminal):
+   ```bash
+   if [[ -n "${NVIM:-}" ]]; then
+       nvim --server "$NVIM" --remote-send ":CCRegister <LABEL><CR>"
+   fi
+   ```
+   This enables targeted nvim RPC injection - multiple terminal tabs in the same nvim can each be addressed by their label.
+
 **Label to use:** "$ARGUMENTS" (or current directory basename if empty)
 
 After registering, confirm to the user:

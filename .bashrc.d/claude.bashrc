@@ -5,7 +5,8 @@ export PATH="$HOME/.local/bin:$PATH"
 # Usage: nvims [files...]
 # The socket allows external tools to send commands to Claude instances
 # running in neovim terminal buffers.
-alias nvims='nvim --listen /tmp/nvim-claude.sock'
-
-# Environment variable for nvim socket path (used by Claude-Code-Remote)
-export NVIM_SOCKET="/tmp/nvim-claude.sock"
+# Each instance gets a unique socket. Inside terminals, $NVIM is auto-set by nvim.
+nvims() {
+    local socket="/tmp/nvim-${RANDOM}-$$.sock"
+    nvim --listen "$socket" "$@"
+}
