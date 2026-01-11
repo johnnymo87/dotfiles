@@ -1,10 +1,7 @@
-# For the github install of rbenv.
-if which ~/.rbenv/bin/rbenv > /dev/null; then
+# Use mise instead - keeping this file for backwards compatibility
+if which ~/.rbenv/bin/rbenv > /dev/null 2>&1; then
   export PATH="$HOME/.rbenv/bin:$PATH"
-fi
-
-if which rbenv > /dev/null; then
   eval "$(rbenv init -)"
-else
-  echo "rbenv not found!"
+elif which rbenv > /dev/null 2>&1; then
+  eval "$(rbenv init -)"
 fi

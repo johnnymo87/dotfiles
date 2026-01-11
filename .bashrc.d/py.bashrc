@@ -1,11 +1,8 @@
-# For the github install of pyenv.
-if which ~/.pyenv/bin/pyenv > /dev/null; then
+# Use mise instead - keeping this file for backwards compatibility
+if which ~/.pyenv/bin/pyenv > /dev/null 2>&1; then
   export PATH="$HOME/.pyenv/bin:$PATH"
   export PYENV_ROOT="$HOME/.pyenv"
-fi
-
-if which pyenv > /dev/null; then
   eval "$(pyenv init -)"
-else
-  echo "pyenv not found!"
+elif which pyenv > /dev/null 2>&1; then
+  eval "$(pyenv init -)"
 fi
