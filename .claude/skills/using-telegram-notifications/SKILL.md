@@ -22,7 +22,7 @@ Get notified on your phone when Claude Code completes tasks or needs input.
 ```
 ┌─────────────────┐    hooks    ┌──────────────────┐
 │  Claude Code    │───────────▶│  Webhook Server  │
-│   (session)     │            │  (localhost:3001)│
+│   (session)     │            │  (localhost:4731)│
 └─────────────────┘            └────────┬─────────┘
                                         │
                                         ▼
@@ -66,16 +66,16 @@ Get notified on your phone when Claude Code completes tasks or needs input.
 
 ```bash
 cd ~/Code/Claude-Code-Remote
-lsof -ti :3001 | xargs kill -9 2>/dev/null; sleep 2 && node start-telegram-webhook.js
+lsof -ti :4731 | xargs kill -9 2>/dev/null; sleep 2 && node start-telegram-webhook.js
 ```
 
-The `lsof` prefix kills any existing process on port 3001 before starting.
+The `lsof` prefix kills any existing process on port 4731 before starting.
 
 **Expected output:**
 ```
 [Telegram-Webhook-Server] [INFO] Starting Telegram webhook server...
 [Telegram-Webhook-Server] [INFO] Configuration:
-[Telegram-Webhook-Server] [INFO] - Port: 3001
+[Telegram-Webhook-Server] [INFO] - Port: 4731
 [Telegram-Webhook-Server] [INFO] - Chat ID: xxxxxxxxx
 [Telegram-Webhook-Server] [INFO] - Webhook Secret: Configured
 ...
@@ -88,7 +88,7 @@ Keep this running in a dedicated terminal or tmux pane.
 In a separate terminal:
 
 ```bash
-pkill -f ngrok; sleep 2 && ngrok http 3001 --url=rehabilitative-joanie-undefeatedly.ngrok-free.dev
+pkill -f ngrok; sleep 2 && ngrok http 4731 --url=rehabilitative-joanie-undefeatedly.ngrok-free.dev
 ```
 
 The `pkill` prefix kills any existing ngrok process before starting.
@@ -99,7 +99,7 @@ The `pkill` prefix kills any existing ngrok process before starting.
 ```
 Session Status                online
 Account                       ...
-Forwarding                    https://rehabilitative-joanie-undefeatedly.ngrok-free.dev -> http://localhost:3001
+Forwarding                    https://rehabilitative-joanie-undefeatedly.ngrok-free.dev -> http://localhost:4731
 ```
 
 Keep this running alongside the webhook server.
@@ -171,7 +171,7 @@ When Claude stops (task complete or waiting for input):
 
 **Check webhook server is running:**
 ```bash
-curl -s http://127.0.0.1:3001/health
+curl -s http://127.0.0.1:4731/health
 # Should return JSON with status
 ```
 
@@ -182,7 +182,7 @@ curl -s http://127.0.0.1:4040/api/tunnels | jq '.tunnels[0].public_url'
 
 **Check session is registered:**
 ```bash
-curl -s http://127.0.0.1:3001/sessions | jq
+curl -s http://127.0.0.1:4731/sessions | jq
 ```
 
 **Check notify_label exists:**
@@ -235,9 +235,9 @@ cat /tmp/claude/tasks/<daemon-task>.output | grep -E "(inject|target)"
 
 ### Issue: Webhook server won't start
 
-**Check port 3001:**
+**Check port 4731:**
 ```bash
-lsof -i :3001
+lsof -i :4731
 # Kill any conflicting process
 ```
 
@@ -303,7 +303,7 @@ sqlite3 src/data/message-tokens.db "SELECT * FROM message_tokens ORDER BY create
 |---------|---------|
 | `/notify-telegram <label>` | Opt current session into notifications |
 | `node start-telegram-webhook.js` | Start webhook server |
-| `ngrok http 3001 --url=<your-domain>` | Start tunnel |
+| `ngrok http 4731 --url=<your-domain>` | Start tunnel |
 
 | Endpoint | Purpose |
 |----------|---------|
