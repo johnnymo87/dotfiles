@@ -100,9 +100,31 @@ local function handle_send(name, command)
   end
 
   -- Send command to the terminal job
-  -- Use \r (carriage return) for Enter, not \n (line feed)
+  -- Hybrid approach: nvim focuses the correct buffer, tmux sends text+Enter
+  -- nvim can target specific terminal buffers within a pane, tmux handles input
+  local job_id = instance.job_id
+  local bufnr = instance.bufnr
+
+  -- Send command to terminal, with delay before Enter to avoid Ink paste detection
+  -- Ink treats multi-char input arriving at once as "paste" and Enter becomes newline.
+  -- A synchronous sleep ensures Enter arrives in a separate read chunk.
   local success, err = pcall(function()
-    vim.fn.chansend(instance.job_id, command .. "\r")
+    -- Focus the terminal and enter insert mode
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_buf(win) == bufnr then
+        vim.api.nvim_set_current_win(win)
+        vim.cmd("startinsert")
+        break
+      end
+    end
+
+    -- Send the text
+    vim.fn.chansend(job_id, command)
+
+    -- Synchronous sleep to ensure Enter arrives as separate chunk (avoids Ink paste detection)
+    -- 100ms is reliable; shorter delays may work but this provides margin for safety
+    vim.fn.system("sleep 0.1")
+    vim.fn.chansend(job_id, "\r")
   end)
 
   if not success then
