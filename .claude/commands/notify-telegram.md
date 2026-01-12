@@ -32,7 +32,7 @@ Enable Telegram notifications for this session so you'll be alerted when tasks c
 
 2. **Register with the daemon:**
    ```bash
-   curl -s -X POST "http://localhost:3001/sessions/enable-notify" \
+   curl -s -X POST "http://localhost:4731/sessions/enable-notify" \
        -H "Content-Type: application/json" \
        -d '{"session_id": "<SESSION_ID>", "label": "<LABEL>", "nvim_socket": ""}'
    ```
@@ -46,7 +46,7 @@ Enable Telegram notifications for this session so you'll be alerted when tasks c
 4. **Register with ccremote** (if running inside nvim terminal):
    ```bash
    if [[ -n "${NVIM:-}" ]]; then
-       nvim --server "$NVIM" --remote-send ":CCRegister <LABEL><CR>"
+       nvim --server "$NVIM" --remote-expr "execute('CCRegister <LABEL>')"
    fi
    ```
    This enables targeted nvim RPC injection - multiple terminal tabs in the same nvim can each be addressed by their label.
