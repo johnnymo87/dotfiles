@@ -44,6 +44,33 @@ Get notified on your phone when Claude Code completes tasks or needs input.
 4. Daemon forwards to Telegram via bot API
 5. Daemon validates session liveness every 60s (PID + start_time check) and cleans up dead sessions
 
+### Terminal Nesting Structure
+
+Multiple Claude Code sessions run in neovim terminal buffers within tmux:
+
+```
+┌─────────────────────────────────────────┐
+│ tmux pane                               │
+│  ┌───────────────────────────────────┐  │
+│  │ neovim                            │  │
+│  │  ┌─────────────────────────────┐  │  │
+│  │  │ terminal buffer 1           │  │  │
+│  │  │ (Claude Code instance A)    │  │  │
+│  │  └─────────────────────────────┘  │  │
+│  │  ┌─────────────────────────────┐  │  │
+│  │  │ terminal buffer 2           │  │  │
+│  │  │ (Claude Code instance B)    │  │  │
+│  │  └─────────────────────────────┘  │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+**Why this matters for reply routing:**
+- tmux can only target the pane (containing neovim), not individual terminal buffers
+- The `ccremote.lua` nvim plugin handles routing replies to the correct terminal buffer
+- Each Claude Code instance registers with ccremote using a unique name
+- Reply injection: daemon → nvim RPC → ccremote → correct terminal buffer → Claude Code
+
 ## Prerequisites
 
 1. **Claude-Code-Remote repository** cloned locally
