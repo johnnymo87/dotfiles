@@ -97,7 +97,7 @@ if [[ -n "$session_id" ]]; then
         '{session_id: $session_id, ppid: $ppid, pid: $pid, start_time: $start_time, cwd: $cwd, nvim_socket: $nvim_socket, tmux_session: $tmux_session, tmux_pane: $tmux_pane, tmux_pane_id: $tmux_pane_id, notify: $notify, label: $label}')
 
     curl -sS --connect-timeout 1 --max-time 2 \
-        -X POST "http://127.0.0.1:3001/session-start" \
+        -X POST "http://127.0.0.1:4731/session-start" \
         -H "Content-Type: application/json" \
         -d "$json_payload" >/dev/null 2>&1 || true
 fi
