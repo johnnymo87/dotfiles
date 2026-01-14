@@ -37,9 +37,9 @@
 [user]
   email = jonathan.mohrbacher@gmail.com
   name = Jonathan Mohrbacher
-  signingkey = ~/.ssh/id_ed25519.pub
+  signingkey = 0C0EF2DF7ADD5DD9
 [gpg]
-  format = ssh
+  format = openpgp
 [pull]
 	rebase = true
 [credential]
