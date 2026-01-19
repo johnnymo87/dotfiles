@@ -126,4 +126,4 @@ Help me draft a technical research question about a problem I've encountered, th
 
    **Important:** Always use a timeout of at least 20 minutes (`-t 1200000`). ChatGPT's "Extended Thinking" mode can take several minutes for complex questions. Never use a shorter timeout.
 
-   After ask-question returns successfully, read the answer file and discuss it with the user. Summarize key insights and recommendations from the response.
+   After ask-question returns successfully, it will print the answer to stdout, as well as save it to the answer file for future reference. Discuss it with the user. Summarize key insights and recommendations from the response.
