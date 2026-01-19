@@ -44,8 +44,41 @@ ln -sf "$DOTFILES_DIR/.gitignore_global" "$HOME/.gitignore_global"
 # Vim/Neovim
 ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
 mkdir -p "$HOME/.config"
-rm -rf "$HOME/.config/nvim" 2>/dev/null || true
-ln -sf "$DOTFILES_DIR/.config/nvim" "$HOME/.config/nvim"
+
+# Create nvim as a real directory with child symlinks
+# This allows home-manager to manage additional files (e.g., lua/ccremote.lua)
+NVIM_HOME="$HOME/.config/nvim"
+NVIM_SRC="$DOTFILES_DIR/.config/nvim"
+
+# Remove old monolithic symlink if it exists
+if [ -L "$NVIM_HOME" ]; then
+  rm "$NVIM_HOME"
+fi
+mkdir -p "$NVIM_HOME"
+
+# Symlink top-level files
+for f in init.lua lazy-lock.json; do
+  [ -f "$NVIM_SRC/$f" ] && ln -sf "$NVIM_SRC/$f" "$NVIM_HOME/$f"
+done
+
+# Symlink top-level directories (except lua/)
+for d in autoload ftplugin; do
+  [ -d "$NVIM_SRC/$d" ] && ln -sfn "$NVIM_SRC/$d" "$NVIM_HOME/$d"
+done
+
+# Create lua/ as real directory with child symlinks
+mkdir -p "$NVIM_HOME/lua"
+
+# Symlink lua/ subdirectories
+for d in config plugins user; do
+  [ -d "$NVIM_SRC/lua/$d" ] && ln -sfn "$NVIM_SRC/lua/$d" "$NVIM_HOME/lua/$d"
+done
+
+# Symlink top-level lua files (ccremote.lua, etc.)
+# On Nix machines, home-manager will replace this with its managed version
+for f in "$NVIM_SRC/lua/"*.lua; do
+  [ -f "$f" ] && ln -sf "$f" "$NVIM_HOME/lua/$(basename "$f")"
+done
 
 # Tmux
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
