@@ -183,8 +183,8 @@ New `*.bashrc` files need to be in the `.bashrc.d` directory, and need to be exe
 7. **Telegram Notifications** (Optional): Get notified on your phone when Claude Code completes tasks.
 
    **Prerequisites**:
-   - [Claude-Code-Remote](https://github.com/johnnymo87/Claude-Code-Remote/tree/develop) daemon running locally
-   - Telegram bot configured in Claude-Code-Remote (`.env` file)
+   - [claude-code-remote](https://github.com/johnnymo87/claude-code-remote/tree/develop) daemon running locally
+   - Telegram bot configured in claude-code-remote (`.env` file)
    - ngrok or similar tunnel for webhook (if not on a public IP)
 
    **How it works**:
