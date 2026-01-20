@@ -153,6 +153,58 @@ local function format_confluence_comments(comments, indent_level)
   return lines
 end
 
+-- Helper function to download attachments for a Jira ticket
+local function download_jira_attachments(ticket_key, attachments, email, api_token)
+  if not attachments or #attachments == 0 then
+    return 0
+  end
+
+  -- Create attachments directory
+  local home = os.getenv("HOME")
+  local attachments_dir = string.format("%s/.cache/atlassian-attachments/jira/%s", home, ticket_key)
+  local mkdir_cmd = string.format("mkdir -p %s", vim.fn.shellescape(attachments_dir))
+  vim.fn.system(mkdir_cmd)
+
+  if vim.v.shell_error ~= 0 then
+    vim.notify("Warning: Could not create attachments directory", vim.log.levels.WARN)
+    return 0
+  end
+
+  -- Download each image attachment
+  local download_count = 0
+  for _, attachment in ipairs(attachments) do
+    local mime_type = attachment.mimeType or ""
+    if mime_type:match("^image/") then
+      local attachment_id = attachment.id
+      local filename = attachment.filename
+      local output_path = string.format("%s/%s", attachments_dir, filename)
+
+      local download_cmd = string.format(
+        "curl -sS -L --fail " ..
+        "--url 'https://wonder.atlassian.net/rest/api/3/attachment/content/%s' " ..
+        "--user '%s:%s' " ..
+        "--output %s",
+        attachment_id,
+        email,
+        api_token,
+        vim.fn.shellescape(output_path)
+      )
+
+      vim.fn.system(download_cmd)
+      if vim.v.shell_error == 0 then
+        download_count = download_count + 1
+      else
+        vim.notify(
+          string.format("Warning: Failed to download %s", filename),
+          vim.log.levels.WARN
+        )
+      end
+    end
+  end
+
+  return download_count
+end
+
 -- Function to fetch Jira ticket content
 function M.fetch_jira_ticket(ticket_key)
   if not ticket_key or ticket_key == "" then
@@ -189,10 +241,10 @@ function M.fetch_jira_ticket(ticket_key)
   -- Fetch ticket data
   local fetch_ticket_command = string.format(
     "curl --fail --silent --show-error --request GET " ..
-    "--url 'https://wonder.atlassian.net/rest/api/3/issue/%s?fields=key,summary,description&expand=renderedFields' " ..
+    "--url 'https://wonder.atlassian.net/rest/api/3/issue/%s?fields=key,summary,description,attachment&expand=renderedFields' " ..
     "--user '%s:%s' " ..
     "--header 'Accept: application/json' " ..
-    "| jq '{ \"key\": .key, \"summary\": .fields.summary, \"description\": .renderedFields.description }'",
+    "| jq '{ \"key\": .key, \"summary\": .fields.summary, \"description\": .renderedFields.description, \"attachments\": .fields.attachment }'",
     ticket_key,
     email,
     api_token
@@ -243,6 +295,13 @@ function M.fetch_jira_ticket(ticket_key)
     vim.notify("Warning: Could not fetch comments, continuing without them.", vim.log.levels.WARN)
   end
 
+  -- Download attachments
+  local attachment_count = 0
+  if ticket_data.attachments and #ticket_data.attachments > 0 then
+    vim.notify("Downloading attachments...", vim.log.levels.INFO)
+    attachment_count = download_jira_attachments(ticket_key, ticket_data.attachments, email, api_token)
+  end
+
   -- Prepare content
   local lines_to_insert = {}
 
@@ -250,6 +309,13 @@ function M.fetch_jira_ticket(ticket_key)
   local title = (ticket_data.key or "Unknown") .. " " .. (ticket_data.summary or "No summary")
   table.insert(lines_to_insert, title)
   table.insert(lines_to_insert, "")
+
+  -- Add attachment note if any were downloaded
+  if attachment_count > 0 then
+    local attachments_path = string.format("~/.cache/atlassian-attachments/jira/%s/", ticket_key)
+    table.insert(lines_to_insert, string.format("> **Attachments downloaded to**: `%s`", attachments_path))
+    table.insert(lines_to_insert, "")
+  end
 
   -- Description
   if ticket_data.description and ticket_data.description ~= "" then
@@ -283,13 +349,21 @@ function M.fetch_jira_ticket(ticket_key)
   local cursor_row = vim.api.nvim_win_get_cursor(0)[1] - 1
   vim.api.nvim_buf_set_lines(bufnr, cursor_row, cursor_row, false, lines_to_insert)
 
-  vim.notify("Jira ticket content inserted.", vim.log.levels.INFO)
+  if attachment_count > 0 then
+    vim.notify(
+      string.format("Jira ticket content inserted with %d image(s) downloaded.", attachment_count),
+      vim.log.levels.INFO
+    )
+  else
+    vim.notify("Jira ticket content inserted.", vim.log.levels.INFO)
+  end
 end
 
 -- Helper function to download attachments for a page
 local function download_attachments(page_id, email, api_token)
   -- Create attachments directory
-  local attachments_dir = string.format("./confluence-attachments/%s", page_id)
+  local home = os.getenv("HOME")
+  local attachments_dir = string.format("%s/.cache/atlassian-attachments/confluence/%s", home, page_id)
   local mkdir_cmd = string.format("mkdir -p %s", vim.fn.shellescape(attachments_dir))
   vim.fn.system(mkdir_cmd)
 
@@ -519,7 +593,7 @@ query getPageWithComments($id: ID!) {
 
   -- Add attachment note if any were downloaded
   if attachment_count > 0 then
-    local attachments_path = string.format("./confluence-attachments/%s/", page_id)
+    local attachments_path = string.format("~/.cache/atlassian-attachments/confluence/%s/", page_id)
     table.insert(lines_to_insert, string.format("> **Attachments downloaded to**: `%s`", attachments_path))
     table.insert(lines_to_insert, "")
   end
