@@ -10,7 +10,6 @@ require("user.atlassian")
 require("user.cursor_highlight")
 -- require("user.difftool").setup()
 require("user.telescope")
--- require("user.vim-obsession")
 -- require("user.tree-sitter")
 
 -- Autocommand for custom filetypes
