@@ -20,5 +20,5 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   end,
 })
 
--- Claude Code Remote control via RPC
-require("ccremote").setup()
+-- Pigeon: nvim terminal RPC for command delivery
+require("pigeon").setup()
