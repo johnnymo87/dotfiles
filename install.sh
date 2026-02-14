@@ -5,20 +5,30 @@ set -euo pipefail
 # Run with: curl -fsSL <raw-url> | bash
 # Or: ./install.sh
 
+# Resolve dotfiles directory from script location (works whether run via
+# ./install.sh or from a piped curl on a fresh machine)
 DOTFILES_REPO="https://github.com/johnnymo87/dotfiles.git"
-DOTFILES_DIR="$HOME/projects/dotfiles"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ -d "$SCRIPT_DIR/.git" ]; then
+  DOTFILES_DIR="$SCRIPT_DIR"
+else
+  # Piped install — clone to platform-appropriate location
+  if [ "$(uname)" = "Darwin" ]; then
+    DOTFILES_DIR="$HOME/Code/dotfiles"
+  else
+    DOTFILES_DIR="$HOME/projects/dotfiles"
+  fi
+fi
 
 echo "==> Installing dotfiles..."
 
-# Create projects directory
-mkdir -p "$HOME/projects"
-
-# Clone dotfiles if not already present
-if [ ! -d "$DOTFILES_DIR" ]; then
+if [ ! -d "$DOTFILES_DIR/.git" ]; then
+  mkdir -p "$(dirname "$DOTFILES_DIR")"
   echo "==> Cloning dotfiles..."
   git clone --recurse-submodules "$DOTFILES_REPO" "$DOTFILES_DIR"
 else
-  echo "==> Dotfiles already cloned, pulling latest..."
+  echo "==> Dotfiles at $DOTFILES_DIR, pulling latest..."
   cd "$DOTFILES_DIR" && git pull && git submodule update --init --recursive
 fi
 
