@@ -60,6 +60,13 @@ mkdir -p "$HOME/.config"
 NVIM_HOME="$HOME/.config/nvim"
 NVIM_SRC="$DOTFILES_DIR/.config/nvim"
 
+# Helper: skip symlink creation if the target is already managed by
+# home-manager (symlink pointing into /nix/store). This prevents
+# install.sh from clobbering paths that home-manager owns.
+is_nix_managed() {
+  [ -L "$1" ] && readlink "$1" | grep -q '^/nix/store/'
+}
+
 # Remove old monolithic symlink if it exists
 if [ -L "$NVIM_HOME" ]; then
   rm "$NVIM_HOME"
@@ -68,12 +75,16 @@ mkdir -p "$NVIM_HOME"
 
 # Symlink top-level files
 for f in init.lua lazy-lock.json; do
-  [ -f "$NVIM_SRC/$f" ] && ln -sf "$NVIM_SRC/$f" "$NVIM_HOME/$f"
+  target="$NVIM_HOME/$f"
+  is_nix_managed "$target" && continue
+  [ -f "$NVIM_SRC/$f" ] && ln -sf "$NVIM_SRC/$f" "$target"
 done
 
 # Symlink top-level directories (except lua/)
 for d in autoload ftplugin; do
-  [ -d "$NVIM_SRC/$d" ] && ln -sfn "$NVIM_SRC/$d" "$NVIM_HOME/$d"
+  target="$NVIM_HOME/$d"
+  is_nix_managed "$target" && continue
+  [ -d "$NVIM_SRC/$d" ] && ln -sfn "$NVIM_SRC/$d" "$target"
 done
 
 # Create lua/ as real directory with child symlinks
@@ -81,13 +92,17 @@ mkdir -p "$NVIM_HOME/lua"
 
 # Symlink lua/ subdirectories
 for d in config plugins user; do
-  [ -d "$NVIM_SRC/lua/$d" ] && ln -sfn "$NVIM_SRC/lua/$d" "$NVIM_HOME/lua/$d"
+  target="$NVIM_HOME/lua/$d"
+  is_nix_managed "$target" && continue
+  [ -d "$NVIM_SRC/lua/$d" ] && ln -sfn "$NVIM_SRC/lua/$d" "$target"
 done
 
 # Symlink top-level lua files (ccremote.lua, etc.)
-# On Nix machines, home-manager will replace this with its managed version
+# Skip files already managed by home-manager (nix store symlinks)
 for f in "$NVIM_SRC/lua/"*.lua; do
-  [ -f "$f" ] && ln -sf "$f" "$NVIM_HOME/lua/$(basename "$f")"
+  target="$NVIM_HOME/lua/$(basename "$f")"
+  is_nix_managed "$target" && continue
+  [ -f "$f" ] && ln -sf "$f" "$target"
 done
 
 # Tmux
@@ -96,23 +111,31 @@ ln -sf "$DOTFILES_DIR/.tmux" "$HOME/.tmux"
 
 # Claude Code
 mkdir -p "$HOME/.claude"
-ln -sf "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json"
-rm -rf "$HOME/.claude/hooks" 2>/dev/null || true
-ln -sf "$DOTFILES_DIR/.claude/hooks" "$HOME/.claude/hooks"
-ln -sf "$DOTFILES_DIR/.claude/statusline.sh" "$HOME/.claude/statusline.sh"
+is_nix_managed "$HOME/.claude/settings.json" || \
+  ln -sf "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json"
+if ! is_nix_managed "$HOME/.claude/hooks"; then
+  rm -rf "$HOME/.claude/hooks" 2>/dev/null || true
+  ln -sf "$DOTFILES_DIR/.claude/hooks" "$HOME/.claude/hooks"
+fi
+is_nix_managed "$HOME/.claude/statusline.sh" || \
+  ln -sf "$DOTFILES_DIR/.claude/statusline.sh" "$HOME/.claude/statusline.sh"
 
 # Claude skills (symlink each to allow private skills)
 mkdir -p "$HOME/.claude/skills"
 for skill in "$DOTFILES_DIR/.claude/skills/"*/; do
   skill_name=$(basename "$skill")
-  ln -sf "$skill" "$HOME/.claude/skills/$skill_name"
+  target="$HOME/.claude/skills/$skill_name"
+  is_nix_managed "$target" && continue
+  ln -sf "$skill" "$target"
 done
 
 # Claude commands
 mkdir -p "$HOME/.claude/commands"
 for cmd in "$DOTFILES_DIR/.claude/commands/"*; do
   cmd_name=$(basename "$cmd")
-  ln -sf "$cmd" "$HOME/.claude/commands/$cmd_name"
+  target="$HOME/.claude/commands/$cmd_name"
+  is_nix_managed "$target" && continue
+  ln -sf "$cmd" "$target"
 done
 
 # Install mise (polyglot version manager)
