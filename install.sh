@@ -121,19 +121,30 @@ is_nix_managed "$HOME/.claude/statusline.sh" || \
   ln -sf "$DOTFILES_DIR/.claude/statusline.sh" "$HOME/.claude/statusline.sh"
 
 # Claude skills (symlink each to allow private skills)
-mkdir -p "$HOME/.claude/skills"
+CLAUDE_SKILLS_HOME="$HOME/.claude/skills"
+# Ensure this is a real directory. A legacy monolithic symlink here can cause
+# self-referential links like skills/<name>/<name> when we link each skill.
+if [ -L "$CLAUDE_SKILLS_HOME" ]; then
+  rm "$CLAUDE_SKILLS_HOME"
+fi
+mkdir -p "$CLAUDE_SKILLS_HOME"
 for skill in "$DOTFILES_DIR/.claude/skills/"*/; do
   skill_name=$(basename "$skill")
-  target="$HOME/.claude/skills/$skill_name"
+  target="$CLAUDE_SKILLS_HOME/$skill_name"
   is_nix_managed "$target" && continue
   ln -sf "$skill" "$target"
 done
 
 # Claude commands
-mkdir -p "$HOME/.claude/commands"
+CLAUDE_COMMANDS_HOME="$HOME/.claude/commands"
+# Keep commands as a real directory for per-command symlinks.
+if [ -L "$CLAUDE_COMMANDS_HOME" ]; then
+  rm "$CLAUDE_COMMANDS_HOME"
+fi
+mkdir -p "$CLAUDE_COMMANDS_HOME"
 for cmd in "$DOTFILES_DIR/.claude/commands/"*; do
   cmd_name=$(basename "$cmd")
-  target="$HOME/.claude/commands/$cmd_name"
+  target="$CLAUDE_COMMANDS_HOME/$cmd_name"
   is_nix_managed "$target" && continue
   ln -sf "$cmd" "$target"
 done
