@@ -20,5 +20,3 @@ vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
   end,
 })
 
--- Pigeon: nvim terminal RPC for command delivery
-require("pigeon").setup()
