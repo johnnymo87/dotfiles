@@ -9,6 +9,7 @@ require("config.lazy")
 require("user.atlassian")
 require("user.cursor_highlight")
 -- require("user.difftool").setup()
+require("user.tabby")       -- OpenCode session titles in tab labels (HM-deployed)
 require("user.telescope")
 -- require("user.tree-sitter")
 
